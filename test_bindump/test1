@@ -1,0 +1,24 @@
+#!/bin/sh
+../sumi -v -n 2 -c 1024 -b 1024 -ot -1 -t >test1float.dat
+diff test1float.dat test1float.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot  0 -t >test1int.dat
+diff test1int.dat test1int.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot  1 -t >test1lsb.dat
+diff test1lsb.dat test1lsb.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot 32 -od 1 -t >test1lsb_32lm.dat
+diff test1lsb_32lm.dat test1lsb_32lm.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot 32 -od 2 -t >test1lsb_32ml.dat
+diff test1lsb_32ml.dat test1lsb_32ml.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot 64 -od 1 -t >test1lsb_64lm.dat
+diff test1lsb_64lm.dat test1lsb_64lm.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot 64 -od 2 -t >test1lsb_64ml.dat
+diff test1lsb_64ml.dat test1lsb_64ml.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -o 99 >test1none.dat
+

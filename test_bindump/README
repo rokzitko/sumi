@@ -1,0 +1,2 @@
+Note that 32lm and 64lm are identical (on little-endian machines, if byte swapping is off). Data is stored from LSB to MSB!
+

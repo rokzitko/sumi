@@ -1,0 +1,14 @@
+#!/bin/sh
+# Test conversions
+
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 32 -od 1 >test3lsb_32lm.dat
+diff test3lsb_32lm.dat test1lsb_32lm.dat || exit 1
+
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 32 -od 2 >test3lsb_32ml.dat
+diff test3lsb_32ml.dat test1lsb_32ml.dat || exit 1
+
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 64 -od 1 >test3lsb_64lm.dat
+diff test3lsb_64lm.dat test1lsb_64lm.dat || exit 1
+
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 64 -od 2 >test3lsb_64ml.dat
+diff test3lsb_64ml.dat test1lsb_64ml.dat || exit 1
