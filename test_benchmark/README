@@ -1,0 +1,4 @@
+2^30 takes 3:30 on Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz.
+This corresponds to ~5 Mbit/s bitrate of single bit generation.
+
+Memory requirement: 16.5GB RAM.

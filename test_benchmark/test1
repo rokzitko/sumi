@@ -1,0 +1,2 @@
+#!/bin/sh
+(/usr/bin/time -v ../sumi -v -n 2 -c 1048576 -b 1048576 -ot 99) 2>test1.result
