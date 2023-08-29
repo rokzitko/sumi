@@ -47,6 +47,7 @@ numbers.
 
 Note the following:
 
+```
 value	round	floor	ceil	trunc
 -----	-----	-----	----	-----
 2.1 	2.0 	2.0 	3.0 	2.0
@@ -54,6 +55,7 @@ value	round	floor	ceil	trunc
 0.1 	0.0 	0.0 	1.0 	0.0
 -0.9 	-1.0 	-1.0 	-0.0 	-0.0
 -1.9 	-2.0 	-2.0 	-1.0 	-1.0
+```
 
 Truncation does not maintain the even/odd sequence across the zero point.
 
