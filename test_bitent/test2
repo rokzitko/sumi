@@ -1,0 +1,4 @@
+#!/bin/sh
+../bitent -v -i test1.dat -ws 32 -n 2 -c 2000000 >test2.dat
+
+
