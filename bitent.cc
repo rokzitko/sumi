@@ -26,6 +26,14 @@ auto & msg = std::cerr; // stream for diagnostic messages
 
 using vc = std::vector<uint64_t>;
 
+std::string bits(uint64_t n, int len) {
+  const std::bitset<64> bs(n);
+  std::string s;
+  for (int i = 0; i < len; i++)
+    s += bs[len-1-i] ? "1" : "0";
+  return s;
+}
+
 int main(int argc, char *argv[])
 {
   InputParser input(argc, argv);
@@ -84,7 +92,7 @@ int main(int argc, char *argv[])
 
   if (print_table) {
     for (uint64_t i = 0; i < bins; i++) {
-      std::cout << "P[" << i << "]=" << std::setw(20) << std::setprecision(14) << std::left << P[i] << "  " << acc[i] << std::endl;
+      std::cout << "P[" << bits(i,n) << " ~ " << std::setw(4) << std::right << i << "]=" << std::setw(20) << std::setprecision(14) << std::left << P[i] << "  " << acc[i] << std::endl;
     }
   }
 
