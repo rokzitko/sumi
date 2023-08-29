@@ -22,7 +22,7 @@ Generator<bool> read(std::string filename, Direction id, bool bswap = false)
 {
   std::ifstream F_file;
   if (filename != "") {
-    std::ifstream F_file(filename);
+    F_file.open(filename);
     if (!F_file) throw std::runtime_error( "Can't open file [" + filename + "] for reading.");
   }
   std::istream & F = (filename != "" ? F_file : std::cin); // if filename is not given, read from stdin

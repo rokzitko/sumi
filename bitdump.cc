@@ -64,8 +64,9 @@ int main(int argc, char *argv[])
   std::bitset<32> b32;
   std::bitset<64> b64;
   std::cout << std::noboolalpha;
-  for (uint64_t i = 0; i < count || count == 0; i++) {
-   try { 
+  uint64_t i;
+  for (i = 0; i < count || count == 0; i++) {
+   try {
     bool b = (*gen)();
     switch (ot) {
     case OutputType::lsb:
@@ -109,6 +110,8 @@ int main(int argc, char *argv[])
       throw std::runtime_error("Output type -ot should be 1, 8, 16, 32, 64 or 99.");
     }
    } catch (const EOF_exception &) {
+     if (verbose)
+       msg << "nr bits read=" << i << std::endl;
      break;
    } catch (const std::exception& e) {
      std::cerr << "Error: " << e.what() << std::endl;
