@@ -1,0 +1,2 @@
+#!/bin/sh
+time ../sumi -v -n 2 -c 4194304 -b 4194304 -t >test2.dat

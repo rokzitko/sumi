@@ -1,0 +1,4 @@
+#!/bin/sh
+../sumi -v -n 2 -c 65536 -b 65536 -t >test1.dat
+diff test1.dat test1.dat.ref || exit 1
+
