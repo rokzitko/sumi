@@ -109,7 +109,7 @@ void timmer_konig_setup(fftw_complex *d, uint64_t size, std::function<double(uin
 Gen pink(std::default_random_engine &dre, double sigma, uint64_t bs)
 {
   // http://fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html
-  // http://fftw.org/fftw3_doc/Complex-numbers.html  
+  // http://fftw.org/fftw3_doc/Complex-numbers.html
   fftw_complex *d;
   fftw_plan p;
   d = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs);
