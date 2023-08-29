@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     msg << "input word size ws=" << ws << std::endl;
     msg << "input bit direction id=" << static_cast<int>(id) << " [" << name(id) << "]" << std::endl;
     msg << "input endianness swap iw=" << std::boolalpha << iw << std::endl;
-    msg << "count=" << count << std::endl;
+    showcount(msg, count);
     msg << "window size n=" << n << " [" << bins << " bins, mask=" << std::bitset<16>(mask) << "]" << std::endl;
   }
 

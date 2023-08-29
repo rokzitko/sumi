@@ -43,17 +43,6 @@ std::string name(NoiseType nt) {
   }
 }
 
-enum class OutputType {
-  floating = -1,
-  integer = 0,
-  lsb = 1,
-  lsb_8 = 8,
-  lsb_16 = 16,
-  lsb_32 = 32,
-  lsb_64 = 64,
-  none = 99
-};
-
 using Gen = Generator<double>;
 
 Gen constant(double x)
@@ -143,10 +132,10 @@ int main(int argc, char *argv[])
     msg << "noise type nt=" << static_cast<int>(nt) << " [" << name(nt) << "]" << std::endl;
     msg << "sigma=" << sigma << std::endl;
     msg << "additive=" << std::boolalpha << additive << std::endl;
-    msg << "count=" << count << (count == 0 ? " [infinite]" : "") << std::endl;
+    showcount(msg, count);
     msg << "block size bs=" << bs << "=" << "2^" << log2(bs) << std::endl;
     msg << "integer filter flt=" << static_cast<int>(flt) << " [" << name(flt) << "]" << std::endl;
-    msg << "output type ot=" << static_cast<int>(ot) << std::endl;
+    msg << "output type ot=" << static_cast<int>(ot) << " " << name(ot) << std::endl;
     msg << "output direction od=" << static_cast<int>(od) << " [" << name(od) << "]" << std::endl;
     msg << "output endianness bswap=" << std::boolalpha << ow << std::endl;
   }

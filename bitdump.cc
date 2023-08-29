@@ -23,15 +23,6 @@
 bool verbose;
 auto & msg = std::cerr; // stream for diagnostic messages
 
-enum class OutputType {
-  lsb = 1,     // ASCII
-  lsb_8 = 8,   // binary
-  lsb_16 = 16, // binary
-  lsb_32 = 32, // binary
-  lsb_64 = 64, // binary
-  none = 99    // no output
-};
-
 int main(int argc, char *argv[])
 {
   InputParser input(argc, argv);
@@ -51,8 +42,8 @@ int main(int argc, char *argv[])
     msg << "input word size ws=" << ws << std::endl;
     msg << "input bit direction id=" << static_cast<int>(id) << " [" << name(id) << "]" << std::endl;
     msg << "input endianness swap iw=" << std::boolalpha << iw << std::endl;
-    msg << "count=" << count << std::endl;
-    msg << "output type ot=" << static_cast<int>(ot) << std::endl;
+    showcount(msg, count);
+    msg << "output type ot=" << static_cast<int>(ot) << " " << name(ot) << std::endl;
     msg << "output bit diretction od=" << static_cast<int>(od) << " [" << name(od) << "]" << std::endl;
     msg << "output endianness swap ow=" << std::boolalpha << ow << std::endl;
   }
