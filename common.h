@@ -28,13 +28,14 @@ inline uint16_t byteswap(const uint16_t x) { return __builtin_bswap16(x); }
 inline uint32_t byteswap(const uint32_t x) { return __builtin_bswap32(x); }
 inline uint64_t byteswap(const uint64_t x) { return __builtin_bswap64(x); }
 
-void showcount(std::ostream &msg, uint64_t count)
+void show_with_logs(std::ostream &msg, const std::string label, const uint64_t val, bool zero_is_infinite = false)
 {
-  msg << "count=" << count;
-  if (count)
-    msg << "=10^" << std::setprecision(4) << log10(count) << "=2^" << std::setprecision(4) << log2(count);
+  msg << label << "=" << val;
+  if (val)
+    msg << "=10^" << std::setprecision(4) << log10(val) << "=2^" << std::setprecision(4) << log2(val);
   else
-    msg << " [infinite]";
+    if (zero_is_infinite) 
+      msg << " [0=infinite]";
   msg << std::endl;
 }
 

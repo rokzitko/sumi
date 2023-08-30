@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     msg << "noise type nt=" << static_cast<int>(nt) << " [" << name(nt) << "]" << std::endl;
     msg << "sigma=" << sigma << std::endl;
     msg << "additive=" << std::boolalpha << additive << std::endl;
-    showcount(msg, count);
+    show_with_logs(msg, "count", count, true);
     msg << "block size bs=" << bs << "=" << "2^" << log2(bs) << std::endl;
     msg << "integer filter flt=" << static_cast<int>(flt) << " [" << name(flt) << "]" << std::endl;
     msg << "output type ot=" << static_cast<int>(ot) << " " << name(ot) << std::endl;

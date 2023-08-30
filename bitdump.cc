@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     msg << "input word size ws=" << ws << std::endl;
     msg << "input bit direction id=" << static_cast<int>(id) << " [" << name(id) << "]" << std::endl;
     msg << "input endianness swap iw=" << std::boolalpha << iw << std::endl;
-    showcount(msg, count);
+    show_with_logs(msg, "count", count, true);
     msg << "output type ot=" << static_cast<int>(ot) << " " << name(ot) << std::endl;
     msg << "output bit diretction od=" << static_cast<int>(od) << " [" << name(od) << "]" << std::endl;
     msg << "output endianness swap ow=" << std::boolalpha << ow << std::endl;
