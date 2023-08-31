@@ -1,6 +1,18 @@
 #!/bin/sh
 # Test conversions
 
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 8 -od 1 >test3lsb_8lm.dat
+diff test3lsb_8lm.dat test1lsb_32lm.dat || exit 1
+
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 8 -od 2 >test3lsb_8ml.dat
+diff test3lsb_8ml.dat test1lsb_8ml.dat || exit 1
+
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 16 -od 1 >test3lsb_16lm.dat
+diff test3lsb_16lm.dat test1lsb_64lm.dat || exit 1
+
+../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 16 -od 2 >test3lsb_16ml.dat
+diff test3lsb_16ml.dat test1lsb_16ml.dat || exit 1
+
 ../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 32 -od 1 >test3lsb_32lm.dat
 diff test3lsb_32lm.dat test1lsb_32lm.dat || exit 1
 

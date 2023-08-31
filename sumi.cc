@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
       std::cout << b << std::endl;
       break;
     case OutputType::lsb_8:
-      b32[od == Direction::lm ? ndx : 7-ndx] = b;
+      b8[od == Direction::lm ? ndx : 7-ndx] = b;
       ndx++;
       if (ndx == 8) {
         writebs<uint8_t, 8>(b8, ow);
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
       b16[od == Direction::lm ? ndx : 15-ndx] = b;
       ndx++;
       if (ndx == 16) {
-        writebs<uint32_t, 16>(b16, ow);
+        writebs<uint16_t, 16>(b16, ow);
         ndx = 0;
       }
       break;

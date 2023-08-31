@@ -8,6 +8,18 @@ diff test1int.dat test1int.dat.ref || exit 1
 ../sumi -v -n 2 -c 1024 -b 1024 -ot  1 -t >test1lsb.dat
 diff test1lsb.dat test1lsb.dat.ref || exit 1
 
+../sumi -v -n 2 -c 1024 -b 1024 -ot 8 -od 1 -t >test1lsb_8lm.dat
+diff test1lsb_8lm.dat test1lsb_8lm.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot 8 -od 2 -t >test1lsb_8ml.dat
+diff test1lsb_8ml.dat test1lsb_8ml.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot 16 -od 1 -t >test1lsb_16lm.dat
+diff test1lsb_16lm.dat test1lsb_16lm.dat.ref || exit 1
+
+../sumi -v -n 2 -c 1024 -b 1024 -ot 16 -od 2 -t >test1lsb_16ml.dat
+diff test1lsb_16ml.dat test1lsb_16ml.dat.ref || exit 1
+
 ../sumi -v -n 2 -c 1024 -b 1024 -ot 32 -od 1 -t >test1lsb_32lm.dat
 diff test1lsb_32lm.dat test1lsb_32lm.dat.ref || exit 1
 
@@ -22,3 +34,6 @@ diff test1lsb_64ml.dat test1lsb_64ml.dat.ref || exit 1
 
 ../sumi -v -n 2 -c 1024 -o 99 >test1none.dat
 
+diff test1lsb_8lm.dat test1lsb_16lm.dat || exit 1
+diff test1lsb_16lm.dat test1lsb_32lm.dat || exit 1
+diff test1lsb_32lm.dat test1lsb_64lm.dat || exit 1

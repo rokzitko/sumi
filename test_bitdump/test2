@@ -1,6 +1,18 @@
 #!/bin/sh
 # Test bit dumping
 
+../bitdump -v -i test1lsb_8lm.dat -ws 8 -id 1 -c 1024 -ot 1 >test2lsb_8lm.dump
+diff test2lsb_8lm.dump test1lsb.dat || exit 1
+
+../bitdump -v -i test1lsb_8ml.dat -ws 8 -id 2 -c 1024 -ot 1 >test2lsb_8ml.dump
+diff test2lsb_8ml.dump test1lsb.dat || exit 1
+
+../bitdump -v -i test1lsb_16lm.dat -ws 16 -id 1 -c 1024 -ot 1 >test2lsb_16lm.dump
+diff test2lsb_16lm.dump test1lsb.dat || exit 1
+
+../bitdump -v -i test1lsb_16ml.dat -ws 16 -id 2 -c 1024 -ot 1 >test2lsb_16ml.dump
+diff test2lsb_16ml.dump test1lsb.dat || exit 1
+
 ../bitdump -v -i test1lsb_32lm.dat -ws 32 -id 1 -c 1024 -ot 1 >test2lsb_32lm.dump
 diff test2lsb_32lm.dump test1lsb.dat || exit 1
 
