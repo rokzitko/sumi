@@ -61,11 +61,32 @@ Truncation does not maintain the even/odd sequence across the zero point.
 
 ## bitdump
 
-`bitdump` is a tool for dumping time series of bit. It can also perform various bit-order (LSB to MSB vs. MSB to LSB), wordsize and byte-order (endianness) conversions.
+`bitdump` is a tool for dumping time series of bit. It can also perform various bit-order (LSB to MSB vs. MSB to LSB), wordsize (between 8, 16, 32 and 64 bits) and byte-order (endianness) conversions.
 
 ## bitent
 
 `bitent` is a tool for calculating Shannon and minimal entropy for a bit series.
+
+Sample outout:
+
+```
+nr=200000000000=10^11.3=2^37.54
+P[000 ~    0]=0.12514958368         25029916736
+P[001 ~    1]=0.12499761538         24999523076
+P[010 ~    2]=0.124855502795        24971100559
+P[011 ~    3]=0.124996685525        24999337105
+P[100 ~    4]=0.124997615445        24999523089
+P[101 ~    5]=0.1248545729          24970914580
+P[110 ~    6]=0.124996685555        24999337111
+P[111 ~    7]=0.12515173872         25030347744
+mean=3.500004288195
+var=5.2530018257816
+stddev=2.2919428059578
+Pmin=0.1248545729
+Pmax=0.12515173872 Hmin=2.9982497605108
+H=2.9999994952889 = 0.99999983176297 per bit
+Hmin=2.9982497605108 = 0.99941658683692 per bit
+```
 
 ## Requirements
 
@@ -74,8 +95,8 @@ Truncation does not maintain the even/odd sequence across the zero point.
 
 ## Contact information:
 
-These codes were created in the scope of a Target research programme (Ciljni raziskovalni programi, CRP) 
-V1-2119 "Cryptographically secure random number generator", funded by UVTP and ARRS, Slovenia.
+These codes were created in the scope of a Target research programme (Ciljni raziskovalni programi, CRP)
+V1-2119 "Cryptographically secure random number generator", funded by UVTP and ARIS, Slovenia.
 
  [Project home page](https://www.ijs.si/ijsw/ARRSProjekti/2021/Kriptografsko%20varen%20generator%20naklju%C4%8Dnih%20%C5%A1trevil)
 
