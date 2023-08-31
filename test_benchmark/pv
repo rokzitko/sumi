@@ -1,0 +1,3 @@
+#!/bin/sh
+# pipe viewer (pv) required
+nice ../sumi -v -n 2 -b 1048576 -c 0 -ot 32 -f 0 -s 3.0 | pv -F "%t %r %a %b %16A" >/dev/null
