@@ -1,0 +1,2 @@
+#!/bin/sh
+time nice ../sumi -v -n 2 -b 1048576 -c 0 -ot 32 -f 0 -s 2.5 | ../bitent -v -ws 32 -n 3 -c 2000000000 -t | tee sigma=2.5.dat
