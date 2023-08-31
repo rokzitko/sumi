@@ -1,2 +1,2 @@
-Note that 32lm and 64lm are identical (on little-endian machines, if byte swapping is off). Data is stored from LSB to MSB!
+Note that 8lm, 16lm, 32lm and 64lm are all identical (on little-endian machines, if byte swapping is off). Data is stored from LSB to MSB!
 
