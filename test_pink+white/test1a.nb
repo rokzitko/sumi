@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     99769,       2246]
-NotebookOptionsPosition[     97800,       2207]
-NotebookOutlinePosition[     98196,       2223]
-CellTagsIndexPosition[     98153,       2220]
+NotebookDataLength[     99837,       2246]
+NotebookOptionsPosition[     97868,       2207]
+NotebookOutlinePosition[     98264,       2223]
+CellTagsIndexPosition[     98221,       2220]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -1689,7 +1689,7 @@ Cell[BoxData[{
      RowBox[{"PlotRange", "->", "All"}], ",", 
      RowBox[{"AxesLabel", "->", 
       RowBox[{"{", 
-       RowBox[{"\"\<FT amplitude\>\"", ",", "\"\<freq\>\""}], "}"}]}], ",", 
+       RowBox[{"\"\<freq\>\"", ",", "\"\<FT amplitude\>\""}], "}"}]}], ",", 
      RowBox[{"LabelStyle", "->", "Larger"}]}], "]"}]}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
@@ -1712,8 +1712,8 @@ Cell[BoxData[{
   3.901344301831244*^9, 3.901344302011009*^9}, {3.9013443997257223`*^9, 
   3.901344410305241*^9}, {3.902150145906219*^9, 3.902150145963443*^9}, {
   3.902151619527671*^9, 3.90215162074863*^9}, {3.9025490000267153`*^9, 
-  3.902549012151024*^9}},
- CellLabel->"In[72]:=",ExpressionUUID->"876ab858-f9f3-4c5e-a05e-9e07020fe33c"],
+  3.902549012151024*^9}, {3.902552885554097*^9, 3.902552889654641*^9}},
+ CellLabel->"In[87]:=",ExpressionUUID->"876ab858-f9f3-4c5e-a05e-9e07020fe33c"],
 
 Cell[BoxData[
  GraphicsBox[{{{}, 
@@ -1926,7 +1926,7 @@ STx0Wn9oIJsCvqttnEpJYsvjpB/1uRScisk782ycRB5jxCAnn4LeqrnySyoS
 3yfK3d2KKCjm98g3zZLoUe/up1dCgWrvlj72PIkXxivD+0spCCi7NzmhIcBJ
 J/PEunIKbnUv0ZVrCnC7ODMvW0KBvlmJbbm2AP8F99E/3A==
         "]]},
-      Annotation[#, "Charting`Private`Tag$21236#1"]& ], 
+      Annotation[#, "Charting`Private`Tag$26235#1"]& ], 
      TagBox[
       {RGBColor[1, 0, 0], AbsoluteThickness[1.6], Opacity[1.], 
        LineBox[CompressedData["
@@ -1943,14 +1943,14 @@ f/OlSYw2FUJw/jO384k3dgvD+dzX/z/dIiUK58dpx4h4J4nB+WXbLmYVLRaH
 a+Wd2ZqI+BVd1/zIUwvOFwzZbuT6BsHfeH/eg+du2nB+YHZbX9dCBB8A8VaY
 Dw==
         "]]},
-      Annotation[#, "Charting`Private`Tag$21236#2"]& ]}, {}}},
+      Annotation[#, "Charting`Private`Tag$26235#2"]& ]}, {}}},
   AspectRatio->NCache[GoldenRatio^(-1), 0.6180339887498948],
   Axes->{True, True},
   AxesLabel->{
     FormBox[
-     TagBox["\"FT amplitude\"", HoldForm], TraditionalForm], 
+     TagBox["\"freq\"", HoldForm], TraditionalForm], 
     FormBox[
-     TagBox["\"freq\"", HoldForm], TraditionalForm]},
+     TagBox["\"FT amplitude\"", HoldForm], TraditionalForm]},
   AxesOrigin->{-0.26255549055979077`, -0.7272284376224771},
   DisplayFunction->Identity,
   Frame->{{False, False}, {False, False}},
@@ -2201,8 +2201,8 @@ Dw==
    3.902157823286478*^9, 3.902197439461409*^9, 3.902201002430159*^9, 
    3.902201648860585*^9, 3.902205024370575*^9, 3.902222610543951*^9, 
    3.902548838790848*^9, 3.902548955950676*^9, {3.9025489890271053`*^9, 
-   3.902549012452928*^9}},
- CellLabel->"Out[78]=",ExpressionUUID->"aa99560f-5773-4dff-a879-33f80872c0f6"]
+   3.902549012452928*^9}, 3.902552889970306*^9},
+ CellLabel->"Out[93]=",ExpressionUUID->"1fe61d35-bcc6-4ab8-bb8f-81b5a1a9593e"]
 }, Open  ]]
 },
 WindowSize->{1153, 1267},
@@ -2242,11 +2242,11 @@ Cell[45460, 1074, 7548, 136, 255, "Output",ExpressionUUID->"f91a2039-2709-4f35-9
 }, Open  ]],
 Cell[CellGroupData[{
 Cell[53045, 1215, 1512, 45, 94, "Input",ExpressionUUID->"73cec447-b298-4836-845c-480d1d305e91"],
-Cell[54560, 1262, 16566, 385, 268, "Output",ExpressionUUID->"281741f6-aca8-426e-a13c-4d1c2186a35d"]
+Cell[54560, 1262, 16566, 385, 245, "Output",ExpressionUUID->"281741f6-aca8-426e-a13c-4d1c2186a35d"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[71163, 1652, 2332, 63, 178, "Input",ExpressionUUID->"876ab858-f9f3-4c5e-a05e-9e07020fe33c"],
-Cell[73498, 1717, 24286, 487, 348, "Output",ExpressionUUID->"aa99560f-5773-4dff-a879-33f80872c0f6"]
+Cell[71163, 1652, 2378, 63, 178, "Input",ExpressionUUID->"876ab858-f9f3-4c5e-a05e-9e07020fe33c"],
+Cell[73544, 1717, 24308, 487, 395, "Output",ExpressionUUID->"1fe61d35-bcc6-4ab8-bb8f-81b5a1a9593e"]
 }, Open  ]]
 }
 ]
