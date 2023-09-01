@@ -1,0 +1,3 @@
+#!/bin/sh
+../sumi -v -n 3 -cut 0.01 -c 65536 -b 65536 -t >test1a.dat
+diff test1a.dat test1a.dat.ref || exit 1

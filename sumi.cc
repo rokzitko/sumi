@@ -26,7 +26,8 @@ auto & msg = std::cerr; // stream for diagnostic messages
 enum class NoiseType {
   undefined = 0,
   white = 1,
-  pink = 2
+  pink = 2,
+  pink_white = 3
 };
 
 std::string name(NoiseType nt) {
@@ -38,6 +39,8 @@ std::string name(NoiseType nt) {
     return "white";
   case pink:
     return "pink";
+  case pink_white:
+    return "pink @ LF+white @ HF";
   default:
     assert(0);
   }
@@ -95,7 +98,9 @@ void timmer_konig_setup(fftw_complex *d, uint64_t size, std::function<double(uin
   if (norm) normalize(d, size);
 }
 
-Gen pink(std::default_random_engine &dre, double sigma, uint64_t bs)
+// S is the spectral function, if norm=true, the IFFT is normalied to total power 1, mult_factor is a prefactor for
+// the generated variates.
+Gen from_spectrum(std::default_random_engine &dre, std::function<double(uint64_t f)> S, uint64_t bs, bool norm, double mult_factor)
 {
   // http://fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html
   // http://fftw.org/fftw3_doc/Complex-numbers.html
@@ -103,13 +108,29 @@ Gen pink(std::default_random_engine &dre, double sigma, uint64_t bs)
   fftw_plan p;
   d = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs);
   p = fftw_plan_dft_1d(bs, d, d, FFTW_BACKWARD, FFTW_ESTIMATE); // in-place FFT
-  auto S = [bs](uint64_t f) -> double { return 1.0/f; };
   for (;;) {
-    timmer_konig_setup(d, bs, S, dre, true);
+    timmer_konig_setup(d, bs, S, dre, norm);
     fftw_execute(p);
     for (uint64_t i = 0; i < bs; i++)
-      co_yield d[i][0]*sigma;
+      co_yield d[i][0]*mult_factor;
   }
+}
+
+// Generate pink noise with 1/f spectrum at all frequencies.
+Gen pink(std::default_random_engine &dre, double sigma, uint64_t bs)
+{
+  auto S = [bs](uint64_t f) -> double { return 1.0/f; };
+  return from_spectrum(dre, S, bs, true, sigma);
+}
+
+// Generate pink noise at low frequencies, white noise at high frequencies. The cutoff frequency 'f_cutoff' is given 
+// in frequency units such that the Nyquist frequency corresponds to 0.5. This means that for f_cutoff=0.5, the
+// spectrum is purely pink, while for f_cutoff=0.25, the lower half is pink, the upper half is white, etc.
+Gen pink_white(std::default_random_engine &dre, double sigma, double f_cutoff, uint64_t bs)
+{
+  const uint64_t f0 = bs*f_cutoff;
+  auto S = [bs, f0](uint64_t f) -> double { return f <= f0 ? 1.0/f : 1.0/f0; };
+  return from_spectrum(dre, S, bs, true, sigma);
 }
 
 int main(int argc, char *argv[])
@@ -118,8 +139,9 @@ int main(int argc, char *argv[])
 
   const NoiseType nt { input.exists("-n") ? std::stoi(input.get("-n")) : 1 };
   const double sigma { input.exists("-s") ? std::stod(input.get("-s")) : 1.0 }; // standard deviation of generated noise
-  const bool additive { input.exists("-a") };
-  const bool testing_mode { input.exists("-t") }; // use fixed seed for rng generator
+  const double f_cutoff { input.exists("-cut") ? std::stod(input.get("-cut")) : 0.5 }; // cutoff frequency for mixed type spectra
+  const bool additive { input.exists("-a") }; // if true, return values are accumulated variates
+  const bool testing_mode { input.exists("-t") }; // use fixed seed for rng generator to generate reproducible sequences for testing
   const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 10 }; // number of random numbers generated, 0 = infinite
   const uint64_t bs { input.exists("-b") ? std::stoul(input.get("-b")) : 1<<10 }; // block size in FFT
   const IntFilter flt { input.exists("-f") ? std::stoi(input.get("-f")) : 0 }; // filtering for floating point to integer conversion (default=rounding)
@@ -150,6 +172,9 @@ int main(int argc, char *argv[])
       break;
     case NoiseType::pink:
       gen = new Gen(pink(dre, sigma, bs));
+      break;
+    case NoiseType::pink_white:
+      gen = new Gen(pink_white(dre, sigma, f_cutoff, bs));
       break;
     case NoiseType::undefined:
       std::cout << "Set the noise type using the -n switch." << std::endl;
