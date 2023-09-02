@@ -15,6 +15,7 @@
 #include <complex>
 #include <fftw3.h>
 
+#include "version.h"
 #include "common.h"
 #include "misc.h"
 #include "io.h"
@@ -151,6 +152,7 @@ int main(int argc, char *argv[])
   verbose = input.exists("-v");
 
   if (verbose) {
+    msg << "sumi " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
     msg << "noise type nt=" << static_cast<int>(nt) << " [" << name(nt) << "]" << std::endl;
     msg << "sigma=" << sigma << std::endl;
     msg << "additive=" << std::boolalpha << additive << std::endl;
@@ -160,6 +162,7 @@ int main(int argc, char *argv[])
     msg << "output type ot=" << static_cast<int>(ot) << " " << name(ot) << std::endl;
     msg << "output direction od=" << static_cast<int>(od) << " [" << name(od) << "]" << std::endl;
     msg << "output endianness bswap=" << std::boolalpha << ow << std::endl;
+    msg << std::flush;
   }
 
   const unsigned long seed = testing_mode ? 1234 : mix(clock(), time(NULL), getpid());

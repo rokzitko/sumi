@@ -3,7 +3,12 @@ FFTW=-fopenmp -lfftw3_omp -lfftw3 -lm
 
 all: sumi bitdump bitent
 
-sumi: sumi.cc misc.h io.h common.h filter.h
+GIT_HASH := $(shell git describe --always)
+
+version.h: .git/index
+	echo "#define GIT_HASH \"${GIT_HASH}\"" > $@
+
+sumi: sumi.cc misc.h io.h common.h filter.h version.h
 	g++ ${CXXFLAGS} ${FFTW} sumi.cc -o sumi
 
 bitdump: bitdump.cc misc.h io.h common.h readbits.h
