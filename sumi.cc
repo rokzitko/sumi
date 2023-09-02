@@ -166,6 +166,7 @@ int main(int argc, char *argv[])
   const uint64_t bs { input.exists("-b") ? std::stoul(input.get("-b")) : 1<<10 }; // block size in FFT
   const IntFilter flt { input.exists("-f") ? std::stoi(input.get("-f")) : 0 }; // filtering for floating point to integer conversion (default=rounding)
   const OutputType ot { input.exists("-ot") ? std::stoi(input.get("-ot")) : -1 }; // floating, integer, bit, binary (default is floating point)
+  int ws = get_ws(ot);
   const Direction od { input.exists("-od") ? std::stoi(input.get("-od")) : 1 }; // 1=lsb to msb, 2=msb to lsb
   const bool ow { input.exists("-ow") }; // byte swap for binary output (endianness change)
   const bool stats { input.exists("-stats") };
@@ -203,10 +204,7 @@ int main(int argc, char *argv[])
       exit(1);
   }
   int ndx = 0;
-  std::bitset<8> b8;
-  std::bitset<16> b16;
-  std::bitset<32> b32;
-  std::bitset<64> b64;
+  std::bitset<64> bits(0);
   Stats stats_floating(msg, "floating");
   Stats stats_integer(msg, "integer");
   Stats stats_lsb(msg, "LSB");
@@ -229,49 +227,29 @@ int main(int argc, char *argv[])
         stats_integer.add(n);
         stats_lsb.add(b);
       }
+      using enum OutputType;
       switch (ot) {
-      case OutputType::floating:
+      case floating:
         std::cout << x << std::endl;
         break;
-      case OutputType::integer:
+      case integer:
         std::cout << n << std::endl;
         break;
-      case OutputType::lsb:
+      case lsb:
         std::cout << b << std::endl;
         break;
-      case OutputType::lsb_8:
-        b8[od == Direction::lm ? ndx : 7-ndx] = b;
+      case lsb_8:
+      case lsb_16:
+      case lsb_32:
+      case lsb_64:
+        bits[od == Direction::lm ? ndx : ws-1-ndx] = b;
         ndx++;
-        if (ndx == 8) {
-          writebs<uint8_t, 8>(b8, ow);
+        if (ndx == ws) {
+          write(bits, ws, ow);
           ndx = 0;
         }
         break;
-      case OutputType::lsb_16:
-        b16[od == Direction::lm ? ndx : 15-ndx] = b;
-        ndx++;
-        if (ndx == 16) {
-          writebs<uint16_t, 16>(b16, ow);
-          ndx = 0;
-        }
-        break;
-      case OutputType::lsb_32:
-        b32[od == Direction::lm ? ndx : 31-ndx] = b;
-        ndx++;
-        if (ndx == 32) {
-          writebs<uint32_t, 32>(b32, ow);
-          ndx = 0;
-        }
-        break;
-      case OutputType::lsb_64:
-        b64[od == Direction::lm ? ndx : 63-ndx] = b;
-        ndx++;
-        if (ndx == 64) {
-          writebs<uint64_t, 64>(b64, ow);
-          ndx = 0;
-        }
-        break;
-      case OutputType::none:
+      case none:
         break;
       }
     }

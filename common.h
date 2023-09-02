@@ -34,7 +34,7 @@ void show_with_logs(std::ostream &msg, const std::string label, const uint64_t v
   if (val)
     msg << "=10^" << std::setprecision(4) << log10(val) << "=2^" << std::setprecision(4) << log2(val);
   else
-    if (zero_is_infinite) 
+    if (zero_is_infinite)
       msg << " [0=infinite]";
   msg << std::endl;
 }
@@ -71,6 +71,22 @@ std::string name(OutputType ot) {
     return "no output";
   default:
     assert(0);
+  }
+}
+
+std::size_t get_ws(const OutputType ot) {
+  using enum OutputType;
+  switch (ot) {
+  case lsb_8:
+    return 8;
+  case lsb_16:
+    return 16;
+  case lsb_32:
+    return 32;
+  case lsb_64:
+    return 64;
+  default:
+    return 0;
   }
 }
 
