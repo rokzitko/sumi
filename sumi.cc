@@ -20,6 +20,7 @@
 #include "misc.h"
 #include "io.h"
 #include "filter.h"
+#include "stats.h"
 
 bool verbose;
 auto & msg = std::cerr; // stream for diagnostic messages
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
   const OutputType ot { input.exists("-ot") ? std::stoi(input.get("-ot")) : -1 }; // floating, integer, bit, binary (default is floating point)
   const Direction od { input.exists("-od") ? std::stoi(input.get("-od")) : 1 }; // 1=lsb to msb, 2=msb to lsb
   const bool ow { input.exists("-ow") }; // byte swap for binary output (endianness change)
+  const bool stats { input.exists("-stats") };
   verbose = input.exists("-v");
 
   if (verbose) {
@@ -188,6 +190,9 @@ int main(int argc, char *argv[])
   std::bitset<16> b16;
   std::bitset<32> b32;
   std::bitset<64> b64;
+  Stats stats_floating(msg, "floating");
+  Stats stats_integer(msg, "integer");
+  Stats stats_lsb(msg, "LSB");
   double total = 0.0;
   for (uint64_t i = 0; i < count || count == 0; i++) {
     double value = (*gen)();
@@ -195,6 +200,11 @@ int main(int argc, char *argv[])
     double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
     int n = filter(x, flt);
     bool b = n%2 != 0; // handles -1, too!
+    if (stats) {
+      stats_floating.add(x);
+      stats_integer.add(n);
+      stats_lsb.add(b);
+    }
     switch (ot) {
     case OutputType::floating:
       std::cout << x << std::endl;

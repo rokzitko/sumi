@@ -1,0 +1,2 @@
+#!/bin/sh
+../sumi -v -s 1.5 -n 2 -c 6553600 -b 65536 -t -stats -ot 99 2>&1 | tee test2a.dat

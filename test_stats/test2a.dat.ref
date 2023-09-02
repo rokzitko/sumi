@@ -1,0 +1,40 @@
+sumi 8a325c0 Sep  2 2023 12:29:04
+noise type nt=2 [pink]
+sigma=1.5
+additive=false
+count=6553600=10^6.816=2^22.64
+block size bs=65536=2^16
+integer filter flt=0 [round]
+output type ot=99 no output
+output direction od=1 [LSB to MSB]
+output endianness bswap=false
+LSB cnt=6553600=10^6.816=2^22.64
+LSB mean=0.5001
+LSB var=0.25
+LSB stddev=0.5
+LSB rvar=0.2429
+LSB rdev=0.4929
+LSB tvar=0.241
+LSB tdev=0.4909
+LSB avar=0.7231
+LSB adev=0.8503
+integer cnt=6553600=10^6.816=2^22.64
+integer mean=-3.647e-05
+integer var=2.333
+integer stddev=1.527
+integer rvar=0.4281
+integer rdev=0.6543
+integer tvar=0.3731
+integer tdev=0.6108
+integer avar=1.119
+integer adev=1.058
+floating cnt=6553600=10^6.816=2^22.64
+floating mean=-1.208e-16
+floating var=2.25
+floating stddev=1.5
+floating rvar=0.3448
+floating rdev=0.5872
+floating tvar=0.2898
+floating tdev=0.5384
+floating avar=0.8695
+floating adev=0.9325
