@@ -1,0 +1,3 @@
+This demonstrates that for sigma>~2.7, all diehard statistical randomness tests pass for random bits
+generated from LSB of 1/f noise. Here we use round-to-closest-integer conversion of floating-point
+to integer.
