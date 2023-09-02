@@ -193,61 +193,66 @@ int main(int argc, char *argv[])
   Stats stats_integer(msg, "integer");
   Stats stats_lsb(msg, "LSB");
   double total = 0.0;
-  for (uint64_t i = 0; i < count || count == 0; i++) {
-    double value = (*gen)();
-    total += value;
-    double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
-    int n = filter(x, flt);
-    bool b = n%2 != 0; // handles -1, too!
-    if (stats) {
-      stats_floating.add(x);
-      stats_integer.add(n);
-      stats_lsb.add(b);
+  try {
+    for (uint64_t i = 0; i < count || count == 0; i++) {
+      double value = (*gen)();
+      total += value;
+      double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
+      int n = filter(x, flt);
+      bool b = n%2 != 0; // handles -1, too!
+      if (stats) {
+        stats_floating.add(x);
+        stats_integer.add(n);
+        stats_lsb.add(b);
+      }
+      switch (ot) {
+      case OutputType::floating:
+        std::cout << x << std::endl;
+        break;
+      case OutputType::integer:
+        std::cout << n << std::endl;
+        break;
+      case OutputType::lsb:
+        std::cout << b << std::endl;
+        break;
+      case OutputType::lsb_8:
+        b8[od == Direction::lm ? ndx : 7-ndx] = b;
+        ndx++;
+        if (ndx == 8) {
+          writebs<uint8_t, 8>(b8, ow);
+          ndx = 0;
+        }
+        break;
+      case OutputType::lsb_16:
+        b16[od == Direction::lm ? ndx : 15-ndx] = b;
+        ndx++;
+        if (ndx == 16) {
+          writebs<uint16_t, 16>(b16, ow);
+          ndx = 0;
+        }
+        break;
+      case OutputType::lsb_32:
+        b32[od == Direction::lm ? ndx : 31-ndx] = b;
+        ndx++;
+        if (ndx == 32) {
+          writebs<uint32_t, 32>(b32, ow);
+          ndx = 0;
+        }
+        break;
+      case OutputType::lsb_64:
+        b64[od == Direction::lm ? ndx : 63-ndx] = b;
+        ndx++;
+        if (ndx == 64) {
+          writebs<uint64_t, 64>(b64, ow);
+          ndx = 0;
+        }
+        break;
+      case OutputType::none:
+        break;
+      }
     }
-    switch (ot) {
-    case OutputType::floating:
-      std::cout << x << std::endl;
-      break;
-    case OutputType::integer:
-      std::cout << n << std::endl;
-      break;
-    case OutputType::lsb:
-      std::cout << b << std::endl;
-      break;
-    case OutputType::lsb_8:
-      b8[od == Direction::lm ? ndx : 7-ndx] = b;
-      ndx++;
-      if (ndx == 8) {
-        writebs<uint8_t, 8>(b8, ow);
-        ndx = 0;
-      }
-      break;
-    case OutputType::lsb_16:
-      b16[od == Direction::lm ? ndx : 15-ndx] = b;
-      ndx++;
-      if (ndx == 16) {
-        writebs<uint16_t, 16>(b16, ow);
-        ndx = 0;
-      }
-      break;
-    case OutputType::lsb_32:
-      b32[od == Direction::lm ? ndx : 31-ndx] = b;
-      ndx++;
-      if (ndx == 32) {
-        writebs<uint32_t, 32>(b32, ow);
-        ndx = 0;
-      }
-      break;
-    case OutputType::lsb_64:
-      b64[od == Direction::lm ? ndx : 63-ndx] = b;
-      ndx++;
-      if (ndx == 64) {
-        writebs<uint64_t, 64>(b64, ow);
-        ndx = 0;
-      }
-      break;
-    case OutputType::none:
-      break;
-    }
+  } catch (const std::exception& e) {
+     std::cerr << "Error: " << e.what() << std::endl;
+     exit(1);
   }
 }
