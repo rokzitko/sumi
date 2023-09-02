@@ -1,0 +1,3 @@
+#!/bin/sh
+# This tests for pipe closure.
+(../sumi -v -s 1. -n 1 -c 0 -b 65536 -t -stats -ot 32 | ../bitent -v -ws 32 -n 3 -c 6553600)  2>&1 | tee test3.dat

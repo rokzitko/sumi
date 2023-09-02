@@ -6,9 +6,11 @@
 #include <string>
 #include <random>
 #include <bitset>
+#include <coroutine>
 #include <ctime>
 #include <cassert>
-#include <coroutine>
+#include <csignal>
+#include <csetjmp>
 #include <math.h>
 #include <unistd.h>
 
@@ -135,6 +137,22 @@ Gen pink_white(std::default_random_engine &dre, double sigma, double f_cutoff, u
   return from_spectrum(dre, S, bs, true, sigma);
 }
 
+// A SIGPIPE is sent to a process if it tried to write to a socket that had been shutdown for writing or isn't connected (anymore).
+// https://stackoverflow.com/questions/1717991/throwing-an-exception-from-within-a-signal-handler
+jmp_buf gBuffer;
+
+void catch_signal(int signalNumber)
+{
+  longjmp(gBuffer, signalNumber);
+}
+
+class pipe_exception : public std::exception {
+ public:
+   const char *what () {
+     return "Pipe close by the receiving end";
+   }
+};
+
 int main(int argc, char *argv[])
 {
   InputParser input(argc, argv);
@@ -193,9 +211,15 @@ int main(int argc, char *argv[])
   Stats stats_integer(msg, "integer");
   Stats stats_lsb(msg, "LSB");
   double total = 0.0;
+  signal(SIGPIPE, catch_signal);
   try {
     for (uint64_t i = 0; i < count || count == 0; i++) {
-      double value = (*gen)();
+      double value;
+      if (setjmp(gBuffer) == 0) {
+        value = (*gen)();
+      } else {
+        throw pipe_exception();
+      }
       total += value;
       double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
       int n = filter(x, flt);
@@ -251,6 +275,8 @@ int main(int argc, char *argv[])
         break;
       }
     }
+  } catch (const pipe_exception &) {
+     std::cerr << "Pipe closed." << std::endl;
   } catch (const std::exception& e) {
      std::cerr << "Error: " << e.what() << std::endl;
      exit(1);
