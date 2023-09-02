@@ -17,6 +17,7 @@
 
 #include <complex>
 
+#include "version.h"
 #include "misc.h"
 #include "io.h"
 #include "readbits.h"
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
   const uint64_t mask = bins-1;
 
   if (verbose) {
+    msg << "bitent " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
     msg << "filename=" << (filename != "" ? filename : "[stdin]") << std::endl;
     msg << "input word size ws=" << ws << std::endl;
     msg << "input bit direction id=" << static_cast<int>(id) << " [" << name(id) << "]" << std::endl;

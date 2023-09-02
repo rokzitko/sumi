@@ -11,10 +11,10 @@ version.h: .git/index
 sumi: sumi.cc misc.h io.h common.h filter.h version.h stats.h
 	g++ ${CXXFLAGS} ${FFTW} sumi.cc -o sumi
 
-bitdump: bitdump.cc misc.h io.h common.h readbits.h
+bitdump: bitdump.cc misc.h io.h common.h readbits.h version.h
 	g++ ${CXXFLAGS} bitdump.cc -o bitdump
 
-bitent: bitent.cc misc.h io.h common.h readbits.h
+bitent: bitent.cc misc.h io.h common.h readbits.h version.h
 	g++ ${CXXFLAGS} bitent.cc -o bitent
 
 clean:
