@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
   const uint64_t bs { input.exists("-b") ? std::stoul(input.get("-b")) : 1<<10 }; // block size in FFT
   const IntFilter flt { input.exists("-f") ? std::stoi(input.get("-f")) : 0 }; // filtering for floating point to integer conversion (default=rounding)
   const OutputType ot { input.exists("-ot") ? std::stoi(input.get("-ot")) : -1 }; // floating, integer, bit, binary (default is floating point)
-  int ws = get_ws(ot);
+  auto ws = get_ws(ot);
   const Direction od { input.exists("-od") ? std::stoi(input.get("-od")) : 1 }; // 1=lsb to msb, 2=msb to lsb
   const bool ow { input.exists("-ow") }; // byte swap for binary output (endianness change)
   const bool stats { input.exists("-stats") };
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
       std::cout << "Set the noise type using the -n switch." << std::endl;
       exit(1);
   }
-  int ndx = 0;
+  std::size_t ndx = 0;
   std::bitset<64> bits(0);
   Stats stats_floating(msg, "floating");
   Stats stats_integer(msg, "integer");
