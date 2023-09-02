@@ -164,7 +164,6 @@ int main(int argc, char *argv[])
     msg << "output type ot=" << static_cast<int>(ot) << " " << name(ot) << std::endl;
     msg << "output direction od=" << static_cast<int>(od) << " [" << name(od) << "]" << std::endl;
     msg << "output endianness bswap=" << std::boolalpha << ow << std::endl;
-    msg << std::flush;
   }
 
   const unsigned long seed = testing_mode ? 1234 : mix(clock(), time(NULL), getpid());
