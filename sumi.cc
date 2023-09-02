@@ -211,52 +211,51 @@ int main(int argc, char *argv[])
   double total = 0.0;
   signal(SIGPIPE, catch_signal);
   try {
-    for (uint64_t i = 0; i < count || count == 0; i++) {
-      double value;
-      if (setjmp(gBuffer) == 0) {
-        value = (*gen)();
-      } else {
-        throw pipe_exception();
-      }
-      total += value;
-      double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
-      int n = filter(x, flt);
-      bool b = n%2 != 0; // handles -1, too!
-      if (stats) {
+    if (setjmp(gBuffer) == 0) {
+      for (uint64_t i = 0; i < count || count == 0; i++) {
+        double value = (*gen)();
+        total += value;
+        double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
+        int n = filter(x, flt);
+        bool b = n%2 != 0; // handles -1, too!
+        if (stats) {
         stats_floating.add(x);
-        stats_integer.add(n);
-        stats_lsb.add(b);
-      }
-      using enum OutputType;
-      switch (ot) {
-      case floating:
-        std::cout << x << std::endl;
-        break;
-      case integer:
-        std::cout << n << std::endl;
-        break;
-      case lsb:
-        std::cout << b << std::endl;
-        break;
-      case lsb_8:
-      case lsb_16:
-      case lsb_32:
-      case lsb_64:
-        bits[od == Direction::lm ? ndx : ws-1-ndx] = b;
-        ndx++;
-        if (ndx == ws) {
-          write(bits, ws, ow);
-          ndx = 0;
+          stats_integer.add(n);
+          stats_lsb.add(b);
         }
-        break;
-      case none:
-        break;
+        using enum OutputType;
+        switch (ot) {
+        case floating:
+          std::cout << x << std::endl;
+          break;
+        case integer:
+          std::cout << n << std::endl;
+          break;
+        case lsb:
+          std::cout << b << std::endl;
+          break;
+        case lsb_8:
+        case lsb_16:
+        case lsb_32:
+        case lsb_64:
+          bits[od == Direction::lm ? ndx : ws-1-ndx] = b;
+          ndx++;
+          if (ndx == ws) {
+            write(bits, ws, ow);
+            ndx = 0;
+          }
+          break;
+        case none:
+          break;
+        }
       }
+    } else {
+      throw pipe_exception();
     }
   } catch (const pipe_exception &) {
-     std::cerr << "Pipe closed." << std::endl;
+    std::cerr << "Pipe closed." << std::endl;
   } catch (const std::exception& e) {
-     std::cerr << "Error: " << e.what() << std::endl;
-     exit(1);
+    std::cerr << "Error: " << e.what() << std::endl;
+    exit(1);
   }
 }
