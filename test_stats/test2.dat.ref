@@ -1,7 +1,10 @@
-sumi 8a325c0 Sep  2 2023 12:29:04
+sumi eb94710 Sep  3 2023 15:34:51
 noise type nt=2 [pink]
 sigma=1
+f_cuttof=0.5
 additive=false
+carry=false
+TESTING MODE: using fixed seed for random number generation
 count=6553600=10^6.816=2^22.64
 block size bs=65536=2^16
 integer filter flt=0 [round]
@@ -9,32 +12,23 @@ output type ot=99 no output
 output direction od=1 [LSB to MSB]
 output endianness bswap=false
 LSB cnt=6553600=10^6.816=2^22.64
-LSB mean=0.4963
-LSB var=0.25
-LSB stddev=0.5
-LSB rvar=0.2049
-LSB rdev=0.4527
-LSB tvar=0.1973
-LSB tdev=0.4442
-LSB avar=0.5919
-LSB adev=0.7693
+LSB mean=0.496308
+LSB  var=    0.249986   stddev=0.499986
+LSB rvar=    0.204898     rdev=0.452656
+LSB tvar=    0.197298     tdev=0.444183
+LSB avar=    0.591895     adev=0.769347
+LSB serial corr. R=1 0.180364 0.0891652 0.0629377
 integer cnt=6553600=10^6.816=2^22.64
-integer mean=0.0001559
-integer var=1.083
-integer stddev=1.041
-integer rvar=0.2365
-integer rdev=0.4864
-integer tvar=0.2121
-integer tdev=0.4606
-integer avar=0.6364
-integer adev=0.7977
+integer mean=0.000155945
+integer  var=      1.0833   stddev=1.04082
+integer rvar=     0.23655     rdev=0.486364
+integer tvar=    0.212117     tdev=0.460561
+integer avar=     0.63635     adev=0.797716
+integer serial corr. R=1 0.78164 0.713978 0.681968
 floating cnt=6553600=10^6.816=2^22.64
-floating mean=2.058e-17
-floating var=1
-floating stddev=1
-floating rvar=0.1533
-floating rdev=0.3915
-floating tvar=0.1288
-floating tdev=0.3589
-floating avar=0.3864
-floating adev=0.6216
+floating mean=2.05759e-17
+floating  var=           1   stddev=1
+floating rvar=    0.153264     rdev=0.39149
+floating tvar=    0.128812     tdev=0.358904
+floating avar=    0.386437     adev=0.621641
+floating serial corr. R=1 0.846736 0.77338 0.738669
