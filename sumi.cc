@@ -127,7 +127,7 @@ Gen pink(std::default_random_engine &dre, double sigma, uint64_t bs)
   return from_spectrum(dre, S, bs, true, sigma);
 }
 
-// Generate pink noise at low frequencies, white noise at high frequencies. The cutoff frequency 'f_cutoff' is given 
+// Generate pink noise at low frequencies, white noise at high frequencies. The cutoff frequency 'f_cutoff' is given
 // in frequency units such that the Nyquist frequency corresponds to 0.5. This means that for f_cutoff=0.5, the
 // spectrum is purely pink, while for f_cutoff=0.25, the lower half is pink, the upper half is white, etc.
 Gen pink_white(std::default_random_engine &dre, double sigma, double f_cutoff, uint64_t bs)
@@ -160,7 +160,8 @@ int main(int argc, char *argv[])
   const NoiseType nt { input.exists("-n") ? std::stoi(input.get("-n")) : 1 };
   const double sigma { input.exists("-s") ? std::stod(input.get("-s")) : 1.0 }; // standard deviation of generated noise
   const double f_cutoff { input.exists("-cut") ? std::stod(input.get("-cut")) : 0.5 }; // cutoff frequency for mixed type spectra
-  const bool additive { input.exists("-a") }; // if true, return values are accumulated variates
+  const bool additive { input.exists("-add") }; // if true, return values are accumulated variates
+  const bool carry { input.exists("-carry") }; // if true, fractional part of current x is added to the next x
   const bool testing_mode { input.exists("-t") }; // use fixed seed for rng generator to generate reproducible sequences for testing
   const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 10 }; // number of random numbers generated, 0 = infinite
   const uint64_t bs { input.exists("-b") ? std::stoul(input.get("-b")) : 1<<10 }; // block size in FFT
@@ -176,9 +177,10 @@ int main(int argc, char *argv[])
     msg << "sumi " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
     msg << "noise type nt=" << static_cast<int>(nt) << " [" << name(nt) << "]" << std::endl;
     msg << "sigma=" << sigma << std::endl;
-    msg << "f_cuttof=" << f_cutoff << std::endl;  
+    msg << "f_cuttof=" << f_cutoff << std::endl;
     msg << "additive=" << std::boolalpha << additive << std::endl;
-    if (testing_mode) 
+    msg << "carry=" << std::boolalpha << carry << std::endl;
+    if (testing_mode)
       msg << "TESTING MODE: using fixed seed for random number generation" << std::endl;
     show_with_logs(msg, "count", count, true);
     msg << "block size bs=" << bs << "=" << "2^" << log2(bs) << std::endl;
@@ -211,7 +213,8 @@ int main(int argc, char *argv[])
   Stats stats_floating(msg, "floating");
   Stats stats_integer(msg, "integer");
   Stats stats_lsb(msg, "LSB");
-  double total = 0.0;
+  double total = 0.0; // total of variates
+  double frac = 0.0; // fractional part of x
   signal(SIGPIPE, catch_signal);
   try {
     if (setjmp(gBuffer) == 0) {
@@ -219,8 +222,10 @@ int main(int argc, char *argv[])
         double value = (*gen)();
         total += value;
         double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
+        if (carry) x += frac; // in carry over mode, add the fractional part of the previous x
         int n = filter(x, flt);
-        bool b = n%2 != 0; // handles -1, too!
+        frac = x-n;
+        bool b = n%2 != 0; // random bit; handles -1, too!
         if (stats) {
         stats_floating.add(x);
           stats_integer.add(n);
