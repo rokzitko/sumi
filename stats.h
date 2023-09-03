@@ -19,11 +19,11 @@ template <typename D = double>
     D xprev1 = 0;
     D xprev2 = 0;
     bool report_on_exit;
-    std::ostream &F;
-    std::string prefix;
+    std::ostream &_F;
+    std::string _prefix;
   public:
-    Stats(std::ostream &_F, std::string _prefix) :
-      F(_F), prefix(_prefix)
+    Stats(std::ostream &F, std::string prefix) :
+      _F(F), _prefix(prefix)
     {
       report_on_exit = true;
     }
@@ -46,10 +46,10 @@ template <typename D = double>
       xprev1 = x;
     }
     void stats(std::ostream &F, std::string prefix) {
-      F << prefix << " ";
-      show_with_logs(F, "cnt", cnt);
       if (cnt < 3)
         return;
+      F << prefix << " ";
+      show_with_logs(F, "cnt", cnt);
       D mean = sumx/cnt;
       D var = sumx2/cnt-mean*mean;
       D stddev = sqrt(var);
@@ -73,7 +73,7 @@ template <typename D = double>
     }
     ~Stats() {
       if (report_on_exit)
-        stats(F, prefix);
+        stats(_F, _prefix);
     }
   };
 
