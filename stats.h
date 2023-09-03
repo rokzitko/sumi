@@ -11,6 +11,7 @@
 template <typename D = double>
   class Stats {
   private:
+    // Accumulators
     uint64_t cnt = 0;
     D sumx = 0;
     D sumx2 = 0;
@@ -18,6 +19,11 @@ template <typename D = double>
     D sumdy2 = 0;
     D xprev1 = 0;
     D xprev2 = 0;
+    // Estimates
+    D mean, var, stddev;
+    D rvar, rdev;
+    D avar, adev;
+    D tvar, tdev;
     bool report_on_exit;
     std::ostream &_F;
     std::string _prefix;
@@ -45,22 +51,21 @@ template <typename D = double>
       xprev2 = xprev1;
       xprev1 = x;
     }
-    void stats(std::ostream &F, std::string prefix) {
-      if (cnt < 3)
-        return;
-      F << prefix << " ";
-      show_with_logs(F, "cnt", cnt);
-      D mean = sumx/cnt;
-      D var = sumx2/cnt-mean*mean;
-      D stddev = sqrt(var);
-      D rvar = 0.5*sumdx2/(cnt-1); // Rok's variance
-      D rdev = sqrt(rvar);
+    void stats() {
+      mean = sumx/cnt;
+      var = sumx2/cnt-mean*mean;
+      stddev = sqrt(var);
+      rvar = 0.5*sumdx2/(cnt-1); // Rok's variance
+      rdev = sqrt(rvar);
       // https://en.wikipedia.org/wiki/Allan_variance
-      D avar = 0.5*sumdy2/(cnt-2); // Allen variance
-      D adev = sqrt(avar);
+      avar = 0.5*sumdy2/(cnt-2); // Allen variance
+      adev = sqrt(avar);
       // https://en.wikipedia.org/wiki/Time_deviation
-      D tvar = avar/3.0; // "time deviation" (well, not quite!)
-      D tdev = sqrt(tvar);
+      tvar = avar/3.0; // "time deviation" (well, not quite!)
+      tdev = sqrt(tvar);
+    }
+    void report(std::ostream &F, std::string prefix) {
+      F << prefix << " "; show_with_logs(F, "cnt", cnt);
       F << prefix << " mean=" << mean << std::endl;
       F << prefix << " var=" << var << std::endl;
       F << prefix << " stddev=" << stddev << std::endl;
@@ -72,8 +77,10 @@ template <typename D = double>
       F << prefix << " adev=" << adev << std::endl;
     }
     ~Stats() {
-      if (report_on_exit)
-        stats(_F, _prefix);
+      if (report_on_exit && cnt >= 2) {
+        stats();
+        report(_F, _prefix);
+      }
     }
   };
 
