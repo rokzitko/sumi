@@ -108,3 +108,19 @@ rgb_minimum_distance|   5|     10000|    1000|0.79692928|  PASSED
       rgb_lagged_sum|  25|   1000000|     100|0.94223325|  PASSED  
       rgb_lagged_sum|  26|   1000000|     100|0.88872100|  PASSED  
       rgb_lagged_sum|  27|   1000000|     100|0.92455146|  PASSED  
+      rgb_lagged_sum|  28|   1000000|     100|0.13725378|  PASSED  
+      rgb_lagged_sum|  29|   1000000|     100|0.35143838|  PASSED  
+      rgb_lagged_sum|  30|   1000000|     100|0.25187276|  PASSED  
+      rgb_lagged_sum|  31|   1000000|     100|0.59314348|  PASSED  
+      rgb_lagged_sum|  32|   1000000|     100|0.88304399|  PASSED  
+     rgb_kstest_test|   0|     10000|    1000|0.64012233|  PASSED  
+     dab_bytedistrib|   0|  51200000|       1|0.01274622|  PASSED  
+             dab_dct| 256|     50000|       1|0.71353450|  PASSED  
+Preparing to run test 207.  ntuple = 0
+        dab_filltree|  32|  15000000|       1|0.64043131|  PASSED  
+        dab_filltree|  32|  15000000|       1|0.62867802|  PASSED  
+Preparing to run test 208.  ntuple = 0
+       dab_filltree2|   0|   5000000|       1|0.16644745|  PASSED  
+       dab_filltree2|   1|   5000000|       1|0.05053492|  PASSED  
+Preparing to run test 209.  ntuple = 0
+        dab_monobit2|  12|  65000000|       1|0.82631121|  PASSED  
