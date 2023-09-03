@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++20 -O3 -Wall
+CXXFLAGS=-std=c++20 -O3 -Wall -Wextra -Wshadow -Wno-clobbered
 FFTW=-fopenmp -lfftw3_omp -lfftw3 -lm
 
 all: sumi bitdump bitent
