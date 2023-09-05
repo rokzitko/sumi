@@ -1,0 +1,4 @@
+#!/bin/sh
+../sumi -v -n 2 -c 65536 -stats -t        >test2-std.dat   2>stats2-std.dat
+../sumi -v -n 2 -c 65536 -stats -t -add   >test2-add.dat   2>stats2-add.dat
+../sumi -v -n 2 -c 65536 -stats -t -carry >test2-carry.dat 2>stats2-carry.dat
