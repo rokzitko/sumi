@@ -8,6 +8,8 @@
 #include <random>
 #include <bitset>
 #include <stdexcept>
+#include <algorithm>
+#include <limits>
 #include <ctime>
 #include <cassert>
 #include <coroutine>
@@ -44,7 +46,8 @@ int main(int argc, char *argv[])
   const Direction id { input.exists("-id") ? std::stoi(input.get("-id")) : 1 }; // default is 1 (lsb to msb)
   const bool iw = input.exists("-iw"); // byte swap for binary input (endianness change)
   const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 0 }; // number of random numbers read, 0 = infinite (until EOF)
-  const int n { input.exists("-n") ? std::stoi(input.get("-n")) : 1 }; // size of sliding window
+  const uint64_t n { input.exists("-n") ? std::stoul(input.get("-n")) : 1 }; // size of sliding window
+  const uint64_t maxlen { input.exists("-x") ? std::stoul(input.get("-x")) : 32 }; // maxlen for counting zeros and ones
   verbose = input.exists("-v");
   debug = input.exists("-d");
   const bool print_table { input.exists("-t") }; // table of probabilities and counts
@@ -60,12 +63,19 @@ int main(int argc, char *argv[])
     msg << "input endianness swap iw=" << std::boolalpha << iw << std::endl;
     show_with_logs(msg, "count", count, true);
     msg << "window size n=" << n << " [" << bins << " bins, mask=" << std::bitset<16>(mask) << "]" << std::endl;
+    msg << "maxlen=" << maxlen << std::endl;
   }
 
   auto gen = boolreader(filename, ws, id, iw);
   vc acc(bins, 0); // accumulator
   uint64_t symbol { 0 };
-  int nrread { 0 };
+  uint64_t nrread { 0 };
+  uint64_t ones { 0 };
+  uint64_t zeros { 0 };
+  bool prev { false };
+  std::vector<uint64_t> cntones(maxlen+1, 0);
+  std::vector<uint64_t> cntzeros(maxlen+1, 0);
+  std::vector<uint64_t> cntother(maxlen+1, 0);
   for (uint64_t i = 0; i < count || count == 0;) { // i not updated here!
    try {
      bool b = (*gen)();
@@ -75,6 +85,33 @@ int main(int argc, char *argv[])
      if (nrread >= n) {
        acc[symbol]++;
        i++;
+     }
+     if (i && b) {
+       if (prev) {
+         ones++;
+       } else {
+         ones=1;
+         zeros=0;
+       }
+     }
+     if (i && !b) {
+       if (!prev) {
+         zeros++;
+       } else {
+         zeros=1;
+         ones=0;
+       }
+     }
+     prev = b;
+     for (unsigned int j = 1; j <= maxlen; j++) {
+       if (nrread >= j) {
+         if (ones >= j)
+           cntones[j]++;
+         else if (zeros >= j)
+           cntzeros[j]++;
+         else
+           cntother[j]++;
+       }
      }
      if (debug) std::cout << "old=" << std::bitset<16>(old) << " b=" << (b?1:0) << " symbol=" << std::bitset<16>(symbol) << " nrread=" << nrread << " ii=" << i << std::endl;
    } catch (const EOF_exception &) {
@@ -117,14 +154,38 @@ int main(int argc, char *argv[])
   std::cout << "Pmin=" << Pmin << std::endl;
   std::cout << "Pmax=" << Pmax << " Hmin=" << Hmin1 << std::endl;
 
-  double H = 0.0;
-  double Hmin = std::numeric_limits<double>::max();
+  double HA = 0.0;
+  double HminA = std::numeric_limits<double>::max();
   for (uint64_t i = 0; i < bins; i++) {
-    H += -log2(P[i])*P[i];
-    Hmin = std::min(Hmin, -log2(P[i]));
+    HA += -log2(P[i])*P[i];
+    HminA = std::min(HminA, -log2(P[i]));
   }
-  const double Hperbit = H/n;
-  const double Hminperbit = Hmin/n;
-  std::cout << "H=" << H << " = " << Hperbit << " per bit" << std::endl;
-  std::cout << "Hmin=" << Hmin << " = " << Hminperbit << " per bit" << std::endl;
+  const double HAperbit = HA/n;
+  const double HminAperbit = HminA/n;
+  std::cout << "H=" << HA << " = " << HAperbit << " per bit"
+    << "   Hmin=" << HminA << " = " << HminAperbit << " per bit" << std::endl;
+
+  std::vector<uint64_t> cnttotal(maxlen+1, 0);
+  std::vector<double> cntP0(maxlen+1, 0);
+  std::vector<double> cntP1(maxlen+1, 0);
+  std::vector<double> cntHmin(maxlen+1, 0);
+  std::vector<double> cntHminperbit(maxlen+1, 0);
+  double Hminpbmin = std::numeric_limits<double>::max();
+  const uint64_t atleast = 1000;
+  for (unsigned int j = 1; j <= maxlen; j++) {
+    cnttotal[j] = cntones[j]+cntzeros[j]+cntother[j];
+    cntP0[j] = double(cntzeros[j])/cnttotal[j];
+    cntP1[j] = double(cntones[j])/cnttotal[j];
+    cntHmin[j] = -log2(std::max(cntP0[j], cntP1[j]));
+    cntHminperbit[j] = cntHmin[j]/j;
+    std::cout << "len=" << std::setw(3) << j << " "
+      << " 0:nr=" << cntzeros[j] << ",p=" << cntP0[j]
+      << " 1:nr=" << cntones[j]  << ",p=" << cntP1[j]
+      << " Hmin= " << cntHmin[j]
+      << " = " << cntHminperbit[j] << " per bit " << std::endl;
+    if (cntzeros[j] >= atleast || cntones[j] >= atleast) Hminpbmin = std::min(Hminpbmin, cntHminperbit[j]);
+  }
+
+  const double Hminperbit = std::min(HminAperbit, Hminpbmin);
+  std::cout << "Hmin = " << Hminperbit << " per bit" << std::endl;
 }
