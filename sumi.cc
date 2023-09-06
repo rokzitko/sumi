@@ -25,26 +25,27 @@
 #include "stats.h"
 
 bool verbose;
+bool debug;
 auto & msg = std::cerr; // stream for diagnostic messages
 
 enum class NoiseType {
-  undefined = 0,
   white = 1,
   pink = 2,
-  pink_white = 3
+  pink_white = 3,
+  pink_plus_white = 12
 };
 
 std::string name(NoiseType nt) {
   using enum NoiseType;
   switch (nt) {
-  case undefined:
-    return "undefined";
   case white:
     return "white";
   case pink:
     return "pink";
   case pink_white:
     return "pink @ LF+white @ HF";
+  case pink_plus_white:
+    return "pink+white";
   default:
     assert(0);
   }
@@ -85,7 +86,11 @@ void normalize(fftw_complex *d, uint64_t size)
 }
 
 // Timmer Konig 1995 algorithm. Generate IFFT with Gaussian variation and power spectrum given by S
-void timmer_konig_setup(fftw_complex *d, uint64_t size, std::function<double(uint64_t f)> S, std::default_random_engine &dre, bool norm = true)
+void timmer_konig_setup(fftw_complex *d,
+                        uint64_t size,
+                        std::function<double(uint64_t f)> S,
+                        std::default_random_engine &dre,
+                        bool norm = true)
 {
   assert(size % 2 == 0);
   const uint64_t ny = size/2; // Nyquist frequency
@@ -99,18 +104,26 @@ void timmer_konig_setup(fftw_complex *d, uint64_t size, std::function<double(uin
   }
   d[ny][0] = di(dre) * sqrt(S(ny)/2.0);
   d[ny][1] = 0.0;
+  if (debug) {
+    auto pwr = calc_power(d, size);
+    msg << "pwr=" << pwr << std::endl;
+  }
   if (norm) normalize(d, size);
 }
 
 // S is the spectral function, if norm=true, the IFFT is normalied to total power 1, mult_factor is a prefactor for
 // the generated variates.
-Gen from_spectrum(std::default_random_engine &dre, std::function<double(uint64_t f)> S, uint64_t bs, bool norm, double mult_factor)
+Gen from_spectrum(std::default_random_engine &dre,
+                  std::function<double(uint64_t f)> S,
+                  uint64_t bs,
+                  bool norm = false,
+                  double mult_factor = 1.0)
 {
   // http://fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html
   // http://fftw.org/fftw3_doc/Complex-numbers.html
   fftw_complex *d;
   fftw_plan p;
-  d = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs);
+  d = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs); // takes care of optimal alignment (do not use std::vector!)
   p = fftw_plan_dft_1d(bs, d, d, FFTW_BACKWARD, FFTW_ESTIMATE); // in-place FFT
   for (;;) {
     timmer_konig_setup(d, bs, S, dre, norm);
@@ -123,7 +136,7 @@ Gen from_spectrum(std::default_random_engine &dre, std::function<double(uint64_t
 // Generate pink noise with 1/f spectrum at all frequencies.
 Gen pink(std::default_random_engine &dre, double sigma, uint64_t bs)
 {
-  auto S = [bs](uint64_t f) -> double { return 1.0/f; };
+  auto S = [](uint64_t f) -> double { return 1.0/f; };
   return from_spectrum(dre, S, bs, true, sigma);
 }
 
@@ -133,8 +146,16 @@ Gen pink(std::default_random_engine &dre, double sigma, uint64_t bs)
 Gen pink_white(std::default_random_engine &dre, double sigma, double f_cutoff, uint64_t bs)
 {
   const uint64_t f0 = bs*f_cutoff;
-  auto S = [bs, f0](uint64_t f) -> double { return f <= f0 ? 1.0/f : 1.0/f0; };
+  auto S = [f0](uint64_t f) -> double { return f <= f0 ? 1.0/f : 1.0/f0; };
   return from_spectrum(dre, S, bs, true, sigma);
+}
+
+Gen pink_plus_white(std::default_random_engine &dre, double ap, double aw, uint64_t bs)
+{
+  const double cp = ap/bs;
+  const double cw = aw/bs;
+  auto S = [cp, cw](uint64_t f) -> double { return cp/f+cw; };
+  return from_spectrum(dre, S, bs, false, 1.0);
 }
 
 // A SIGPIPE is sent to a process if it tried to write to a socket that had been shutdown for writing or isn't connected (anymore).
@@ -157,7 +178,9 @@ int main(int argc, char *argv[])
 {
   InputParser input(argc, argv);
 
-  const NoiseType nt { input.exists("-n") ? std::stoi(input.get("-n")) : 1 };
+  const NoiseType nt { input.exists("-n") ? std::stoi(input.get("-n")) : 1 };  // noise type (pink, white, etc.)
+  const double ap { input.exists("-ap") ? std::stod(input.get("-ap")) : -1 };  // prefactors ap,aw in S(f)=ap/f+aw
+  const double aw { input.exists("-aw") ? std::stod(input.get("-aw")) : 0.0 }; // prefactors ap,aw in S(f)=ap/f+aw
   const double sigma { input.exists("-s") ? std::stod(input.get("-s")) : 1.0 }; // standard deviation of generated noise
   const double f_cutoff { input.exists("-cut") ? std::stod(input.get("-cut")) : 0.5 }; // cutoff frequency for mixed type spectra
   const bool additive { input.exists("-add") }; // if true, return values are accumulated variates
@@ -172,10 +195,13 @@ int main(int argc, char *argv[])
   const bool ow { input.exists("-ow") }; // byte swap for binary output (endianness change)
   const bool stats { input.exists("-stats") };
   verbose = input.exists("-v");
+  debug = input.exists("-d");
 
   if (verbose) {
     msg << "sumi " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
     msg << "noise type nt=" << static_cast<int>(nt) << " [" << name(nt) << "]" << std::endl;
+    if (ap >= 0 && aw >= 0)
+      msg << "ap=" << ap << " aw=" << aw << std::endl;
     msg << "sigma=" << sigma << std::endl;
     msg << "f_cuttof=" << f_cutoff << std::endl;
     msg << "additive=" << std::boolalpha << additive << std::endl;
@@ -195,18 +221,21 @@ int main(int argc, char *argv[])
 
   Gen *gen;
   switch (nt) {
-    case NoiseType::white:
-      gen = new Gen(white(dre, sigma));
-      break;
-    case NoiseType::pink:
-      gen = new Gen(pink(dre, sigma, bs));
-      break;
-    case NoiseType::pink_white:
-      gen = new Gen(pink_white(dre, sigma, f_cutoff, bs));
-      break;
-    case NoiseType::undefined:
-      std::cout << "Set the noise type using the -n switch." << std::endl;
-      exit(1);
+  case NoiseType::white:
+    gen = new Gen(white(dre, sigma));
+    break;
+  case NoiseType::pink:
+    gen = new Gen(pink(dre, sigma, bs));
+    break;
+  case NoiseType::pink_white:
+    gen = new Gen(pink_white(dre, sigma, f_cutoff, bs));
+    break;
+  case NoiseType::pink_plus_white:
+    gen = new Gen(pink_plus_white(dre, ap, aw, bs));
+    break;
+  default:
+    std::cerr << "Set the noise type using the -n switch." << std::endl;
+    exit(1);
   }
   std::size_t ndx = 0;
   std::bitset<64> bits(0);
