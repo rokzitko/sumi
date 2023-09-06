@@ -152,7 +152,7 @@ Gen pink_white(std::default_random_engine &dre, double sigma, double f_cutoff, u
 
 Gen pink_plus_white(std::default_random_engine &dre, double ap, double aw, uint64_t bs)
 {
-  const double cp = ap/bs;
+  const double cp = ap;
   const double cw = aw/bs;
   auto S = [cp, cw](uint64_t f) -> double { return cp/f+cw; };
   return from_spectrum(dre, S, bs, false, 1.0);
