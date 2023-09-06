@@ -1,0 +1,2 @@
+#!/bin/sh
+../sumi -v -d -n 12 -ap 1.0 -aw 0.0 -b 1048576 -c 1048576 -ot 99 -stats

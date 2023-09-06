@@ -1,0 +1,3 @@
+#!/bin/sh
+../sumi -v -n 12 -ap 0.0 -aw 1.0 -b 1073741824 -c 1073741824 -ot 99 -t -stats 2>&1 | tee test1c.dat
+

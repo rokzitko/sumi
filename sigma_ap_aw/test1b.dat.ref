@@ -1,0 +1,36 @@
+sumi 91c4db2 Sep  6 2023 08:46:25
+noise type nt=12 [pink+white]
+ap=0 aw=1
+sigma=1
+f_cuttof=0.5
+additive=false
+carry=false
+TESTING MODE: using fixed seed for random number generation
+count=1048576=10^6.021=2^20
+block size bs=1048576=2^20
+integer filter flt=0 [round]
+output type ot=99 no output
+output direction od=1 [LSB to MSB]
+output endianness bswap=false
+pwr=0.9967
+LSB cnt=1048576=10^6.021=2^20
+LSB mean=0.494511
+LSB  var=     0.24997   stddev=0.49997
+LSB rvar=    0.249948     rdev=0.499948
+LSB tvar=    0.249997     tdev=0.499997
+LSB avar=    0.749991     adev=0.86602
+LSB serial corr. R=1 8.64052e-05 0.000671058 0.000641471
+integer cnt=1048576=10^6.021=2^20
+integer mean=0.000516891
+integer  var=      1.0797   stddev=1.03909
+integer rvar=     1.07983     rdev=1.03915
+integer tvar=     1.08095     tdev=1.03969
+integer avar=     3.24286     adev=1.8008
+integer serial corr. R=1 -0.000118607 0.00300555 -9.65249e-05
+floating cnt=1048576=10^6.021=2^20
+floating mean=1.12719e-17
+floating  var=    0.996694   stddev=0.998346
+floating rvar=    0.996612     rdev=0.998305
+floating tvar=    0.997429     tdev=0.998714
+floating avar=     2.99229     adev=1.72982
+floating serial corr. R=1 8.20957e-05 0.00253798 -0.000541332
