@@ -1,0 +1,2 @@
+#!/bin/sh
+time sumi -v -n 2 -b 1048576 -c 1048576 -ot 0 -f 1 -s 1.0 -t -stats >test1-sigma=1_0-int.dat
