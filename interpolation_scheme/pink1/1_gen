@@ -1,0 +1,3 @@
+#!/bin/sh
+../sumi -v -n 12 -ap 0.1 -aw 0.3 -b 32768 -c 1048576 -ot -1 -stats >rnd.dat 2>log
+

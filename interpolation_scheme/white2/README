@@ -1,0 +1,1 @@
+It's best to run this on a shared memory device (/dev/shm on Linux system) because of the intensive file I/O.

@@ -32,7 +32,8 @@ enum class NoiseType {
   white = 1,
   pink = 2,
   pink_white = 3,
-  pink_plus_white = 12
+  pink_plus_white = 12,
+  pink_plus_white_with_interpolation = 120
 };
 
 std::string name(NoiseType nt) {
@@ -46,6 +47,8 @@ std::string name(NoiseType nt) {
     return "pink @ LF+white @ HF";
   case pink_plus_white:
     return "pink+white";
+  case pink_plus_white_with_interpolation:
+    return "pink+white with interpolation";
   default:
     assert(0);
   }
@@ -111,6 +114,9 @@ void timmer_konig_setup(fftw_complex *d,
   if (norm) normalize(d, size);
 }
 
+// http://fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html
+// http://fftw.org/fftw3_doc/Complex-numbers.html
+
 // S is the spectral function, if norm=true, the IFFT is normalied to total power 1, mult_factor is a prefactor for
 // the generated variates.
 Gen from_spectrum(std::default_random_engine &dre,
@@ -119,17 +125,51 @@ Gen from_spectrum(std::default_random_engine &dre,
                   bool norm = false,
                   double mult_factor = 1.0)
 {
-  // http://fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html
-  // http://fftw.org/fftw3_doc/Complex-numbers.html
-  fftw_complex *d;
-  fftw_plan p;
-  d = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs); // takes care of optimal alignment (do not use std::vector!)
-  p = fftw_plan_dft_1d(bs, d, d, FFTW_BACKWARD, FFTW_ESTIMATE); // in-place FFT
+  auto d = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs); // takes care of optimal alignment (do not use std::vector!)
+  auto p = fftw_plan_dft_1d(bs, d, d, FFTW_BACKWARD, FFTW_ESTIMATE); // in-place FFT
   for (;;) {
     timmer_konig_setup(d, bs, S, dre, norm);
     fftw_execute(p);
     for (uint64_t i = 0; i < bs; i++)
       co_yield d[i][0]*mult_factor;
+  }
+}
+
+auto tent(const double x)
+{
+  if (x <= 0.5)
+    return x;
+  else
+    return 1.0-x;
+}
+
+// Linear interpolation between two generation processes. This fixes the problem that blocks of size bs are fully
+// uncorrelated which may skew some statistcs.
+Gen from_spectrum_with_interpolation(std::default_random_engine &dre,
+                                     std::function<double(uint64_t f)> S,
+                                     uint64_t bs,
+                                     bool norm = false,
+                                     double mult_factor = 1.0)
+{
+  auto d1 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs);
+  auto p1 = fftw_plan_dft_1d(bs, d1, d1, FFTW_BACKWARD, FFTW_ESTIMATE);
+  auto d2 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs);
+  auto p2 = fftw_plan_dft_1d(bs, d2, d2, FFTW_BACKWARD, FFTW_ESTIMATE);
+  uint64_t i1 = 0;
+  uint64_t i2 = bs/2;
+  for (;;) {
+    if (i1 == 0) {
+      timmer_konig_setup(d1, bs, S, dre, norm);
+      fftw_execute(p1);
+    }
+    if (i2 == bs/2) {
+      timmer_konig_setup(d2, bs, S, dre, norm);
+      fftw_execute(p2);
+    }
+    const double mix = tent(double(i1)/bs);
+    co_yield (mix*d1[i1][0]+(1.0-mix)*d2[i2][0])*mult_factor;
+    i1 = (i1+1) % bs;
+    i2 = (i2+1) % bs;
   }
 }
 
@@ -156,6 +196,14 @@ Gen pink_plus_white(std::default_random_engine &dre, double ap, double aw, uint6
   const double cw = aw/bs;
   auto S = [cp, cw](uint64_t f) -> double { return cp/f+cw; };
   return from_spectrum(dre, S, bs, false, 1.0);
+}
+
+Gen pink_plus_white_with_interpolation(std::default_random_engine &dre, double ap, double aw, uint64_t bs)
+{
+  const double cp = ap;
+  const double cw = aw/bs;
+  auto S = [cp, cw](uint64_t f) -> double { return cp/f+cw; };
+  return from_spectrum_with_interpolation(dre, S, bs, false, 1.0);
 }
 
 // A SIGPIPE is sent to a process if it tried to write to a socket that had been shutdown for writing or isn't connected (anymore).
@@ -232,6 +280,9 @@ int main(int argc, char *argv[])
     break;
   case NoiseType::pink_plus_white:
     gen = new Gen(pink_plus_white(dre, ap, aw, bs));
+    break;
+  case NoiseType::pink_plus_white_with_interpolation:
+    gen = new Gen(pink_plus_white_with_interpolation(dre, ap, aw, bs));
     break;
   default:
     std::cerr << "Set the noise type using the -n switch." << std::endl;

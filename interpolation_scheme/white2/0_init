@@ -1,0 +1,10 @@
+#!/usr/bin/env perl
+
+open(O, ">cnt");
+print O "0\n";
+close O;
+
+open(O, ">sum.dat");
+for ($i = 0; $i < 2**20/2; $i++) {
+  print O "0\n";
+}

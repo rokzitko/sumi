@@ -1,0 +1,8 @@
+pink1: 1/f noise, no interpolation
+pink2: 1/f noise, with interpolation
+white1: white noise, no interpolation
+white2: white noise, with interpolation
+
+In the absence of interpolation: the spectrum decreases as S(f) \propto f for all frequencies below the repeat frequency 
+of FFT blocks. Interpolation smooths this out (weaker than linear decay).
+

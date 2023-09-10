@@ -1,0 +1,11 @@
+#!/bin/sh
+math --batchinput <<EOF
+l=Flatten @ Import["rnd.dat"];
+len=Length[l];
+Print["len=", len];
+fft=Take[Fourier[l], len/2];
+pwr=2*Abs[fft]^2/len;
+var=Total[pwr];
+Print["var=", var];
+Export["periodogram.dat", pwr];
+EOF

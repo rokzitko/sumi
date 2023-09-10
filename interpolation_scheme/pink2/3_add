@@ -1,0 +1,12 @@
+#!/bin/sh
+math --batchinput <<EOF
+prec = 40;
+sum = Import["sum.dat"];
+Print[First[sum]];
+sum = Map[SetPrecision[#, prec]&, sum];
+l = Import["periodogram.dat"];
+Print[First[l]];
+l = Map[SetPrecision[#, prec]&, l];
+sum = sum+l;
+Export["sum.dat", sum];
+EOF

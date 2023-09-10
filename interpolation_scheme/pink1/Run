@@ -1,0 +1,34 @@
+#!/usr/bin/env perl
+
+use warnings;
+
+my $maxcnt = 2000;
+
+if (!-e "cnt") {
+  system "./0_init";
+  if (!-e "cnt" || !-e "sum.dat") {
+    die "init failed";
+  }
+}
+
+chomp($cnt = `cat cnt`);
+
+for (;;) {
+  print "cnt=$cnt\n";
+  system "./1_gen";
+  if (!-e "rnd.dat") {
+    die "rnd.dat not found";
+  }
+  system "./2_stat";
+  if (!-e "periodogram.dat") {
+    die "periodogram.dat not found";
+  }
+  system "./3_add";
+  $cnt++;
+  open (O, ">cnt");
+  print O "$cnt\n";
+  close O;
+  if (-e "STOP" || $cnt == $maxcnt) {
+    last;
+  }
+}
