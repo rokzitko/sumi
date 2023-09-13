@@ -231,6 +231,7 @@ int main(int argc, char *argv[])
   const double aw { input.exists("-aw") ? std::stod(input.get("-aw")) : 0.0 }; // prefactors ap,aw in S(f)=ap/f+aw
   const double sigma { input.exists("-s") ? std::stod(input.get("-s")) : 1.0 }; // standard deviation of generated noise
   const double f_cutoff { input.exists("-cut") ? std::stod(input.get("-cut")) : 0.5 }; // cutoff frequency for mixed type spectra
+  const double mu { input.get_double("-mu", 0.0) }; // shift all variates by mu
   const bool additive { input.exists("-add") }; // if true, return values are accumulated variates
   const bool carry { input.exists("-carry") }; // if true, fractional part of current x is added to the next x
   const bool testing_mode { input.exists("-t") }; // use fixed seed for rng generator to generate reproducible sequences for testing
@@ -299,7 +300,7 @@ int main(int argc, char *argv[])
   try {
     if (setjmp(gBuffer) == 0) {
       for (uint64_t i = 0; i < count || count == 0; i++) {
-        double value = (*gen)();
+        double value = (*gen)() + mu;
         total += value;
         double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
         if (carry) x += frac; // in carry over mode, add the fractional part of the previous x

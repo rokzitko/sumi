@@ -27,6 +27,13 @@ class InputParser {
    bool exists(const std::string &option) const {
      return std::find(this->tokens.begin(), this->tokens.end(), option) != this->tokens.end();
    }
+//   template <typename T>
+//     T get(const std::string &option, const T def) const {
+//       return exists(option) ? T(get(option)) : def;
+//     }
+   auto get_double(const std::string &option, const double def) const {
+       return exists(option) ? std::stod(get(option)) : def;
+     }
  private:
    std::vector<std::string> tokens;
 };
@@ -122,7 +129,7 @@ unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
   return c;
 }
 
-bool file_exists(std::string filename) 
+bool file_exists(std::string filename)
 {
   std::ifstream F(filename);
   return bool(F);

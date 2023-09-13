@@ -1,0 +1,3 @@
+#!/bin/sh
+../sumi -v -n 1 -s 0.1 -c 1000 -t -stats >test1.dat
+diff test1.dat test1.dat.ref || exit 1
