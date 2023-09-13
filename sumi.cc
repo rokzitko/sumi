@@ -253,6 +253,7 @@ int main(int argc, char *argv[])
       msg << "ap=" << ap << " aw=" << aw << std::endl;
     msg << "sigma=" << sigma << std::endl;
     msg << "f_cuttof=" << f_cutoff << std::endl;
+    msg << "mu=" << mu << std::endl;
     msg << "additive=" << std::boolalpha << additive << std::endl;
     msg << "carry=" << std::boolalpha << carry << std::endl;
     if (testing_mode)
