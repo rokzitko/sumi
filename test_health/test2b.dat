@@ -1,0 +1,38 @@
+sumi fd9c696 Feb  2 2024 07:47:11
+noise type nt=12 [pink+white]
+ap=0.169 aw=0
+sigma=1
+f_cuttof=0.5
+mu=0.5
+additive=false
+carry=false
+TESTING MODE: using fixed seed for random number generation
+count=10000000=10^7=2^23.25
+block size bs=32768=2^15
+integer filter flt=0 [round]
+output type ot=99 no output
+output direction od=1 [LSB to MSB]
+output endianness bswap=false
+health test blocksize=10000 rvar_lim=0.58
+Health test: fail=0 pass=1000 fail_ratio=0 pass_ratio=1
+LSB cnt=10000000=10^7=2^23.25
+LSB mean=0.499918
+LSB  var=        0.25   stddev=0.5
+LSB rvar=    0.249116     rdev=0.499115
+LSB tvar=     0.24889     tdev=0.498888
+LSB avar=    0.746669     adev=0.8641
+LSB serial corr. R=1 0.00353767 0.000827773 0.000635473
+integer cnt=10000000=10^7=2^23.25
+integer mean=0.500105
+integer  var=     3.56941   stddev=1.88929
+integer rvar=    0.641016     rdev=0.800635
+integer tvar=    0.552095     tdev=0.743031
+integer avar=     1.65629     adev=1.28697
+integer serial corr. R=1 0.820414 0.745678 0.710521
+floating cnt=10000000=10^7=2^23.25
+floating mean=0.500129
+floating  var=     3.48636   stddev=1.86718
+floating rvar=    0.557754     rdev=0.746829
+floating tvar=    0.468823     tdev=0.684706
+floating avar=     1.40647     adev=1.18595
+floating serial corr. R=1 0.840019 0.763494 0.727569

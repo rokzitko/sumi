@@ -245,6 +245,10 @@ int main(int argc, char *argv[])
   const bool stats { input.exists("-stats") };
   verbose = input.exists("-v");
   debug = input.exists("-d");
+  // Health-test simulations
+  const uint64_t test_blocksize { input.exists("-B") ? std::stoul(input.get("-B")) : 0 }; // Block size for simulating health-tests
+  const bool test_enabled = test_blocksize > 0;
+  const double test_rvar_lim { input.exists("-R") ? std::stod(input.get("-R")) : 0.0 }; // Limiting value for raising an alarm
 
   if (verbose) {
     msg << "sumi " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
@@ -264,6 +268,8 @@ int main(int argc, char *argv[])
     msg << "output type ot=" << static_cast<int>(ot) << " " << name(ot) << std::endl;
     msg << "output direction od=" << static_cast<int>(od) << " [" << name(od) << "]" << std::endl;
     msg << "output endianness bswap=" << std::boolalpha << ow << std::endl;
+    if (test_enabled)
+       msg << "health test blocksize=" << test_blocksize << " rvar_lim=" << test_rvar_lim << std::endl;
   }
 
   const unsigned long seed = testing_mode ? 1234 : mix(clock(), time(NULL), getpid());
@@ -297,6 +303,11 @@ int main(int argc, char *argv[])
   Stats stats_lsb(msg, "LSB");
   double total = 0.0; // total of variates
   double frac = 0.0; // fractional part of x
+  // Testing
+  uint64_t test_cnt_pass = 0;
+  uint64_t test_cnt_fail = 0;
+  Stats test_stats_integer(msg, "test int");
+  uint64_t test_i = 0;
   signal(SIGPIPE, catch_signal);
   try {
     if (setjmp(gBuffer) == 0) {
@@ -309,9 +320,23 @@ int main(int argc, char *argv[])
         frac = x-n;
         bool b = n%2 != 0; // random bit; handles -1, too!
         if (stats) {
-        stats_floating.add(x);
+          stats_floating.add(x);
           stats_integer.add(n);
           stats_lsb.add(b);
+        }
+        if (test_enabled) {
+          test_stats_integer.add(n); // n = integer
+          test_i++;
+          if (test_i == test_blocksize) {
+            test_stats_integer.stats();
+            const double rvar = test_stats_integer.get_rvar();
+            if (rvar < test_rvar_lim)
+              test_cnt_fail++;
+            else
+              test_cnt_pass++;
+            test_i = 0;
+            test_stats_integer.reset();
+          }
         }
         using enum OutputType;
         switch (ot) {
@@ -347,5 +372,10 @@ int main(int argc, char *argv[])
   } catch (const std::exception& e) {
     std::cerr << "Error: " << e.what() << std::endl;
     exit(1);
+  }
+  if (test_enabled) {
+     uint64_t cnt_total = test_cnt_fail + test_cnt_pass;
+     msg << "Health test: fail=" << test_cnt_fail << " pass=" << test_cnt_pass
+       << " fail_ratio=" << double(test_cnt_fail)/cnt_total << " pass_ratio=" << double(test_cnt_pass)/cnt_total << std::endl;
   }
 }

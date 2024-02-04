@@ -45,6 +45,10 @@ template <typename D = double>
     Stats() {
       report_on_exit = false;
     }
+    void reset() { // reset accumulators
+      cnt = 0;
+      sumx = sumx2 = sumdx2 = sumdy2 = suma1 = suma2 = suma3 = 0;
+    }
     void add(const D x) {
       cnt++;
       sumx += x;
@@ -85,6 +89,9 @@ template <typename D = double>
       R1 = (suma1/(cnt-1)-mean*mean)/var;
       R2 = (suma2/(cnt-2)-mean*mean)/var;
       R3 = (suma3/(cnt-3)-mean*mean)/var;
+    }
+    D get_rvar() {
+       return rvar;
     }
     void report(std::ostream &F, std::string prefix) {
       F << prefix << " "; show_with_logs(F, "cnt", cnt);
