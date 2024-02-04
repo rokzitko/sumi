@@ -1,0 +1,5 @@
+#!/bin/sh
+# -n 12: pink+white
+# -t: fixed seed (for testing)
+# -ot 99: no output
+../sumi -mu 0.5 -v -n 12 -ap 0.132 -aw 0 -b 1048576 -c 10000000 -t -stats -ot 99 2>&1 | tee test1-20.dat
