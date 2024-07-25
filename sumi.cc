@@ -14,6 +14,8 @@
 #include <math.h>
 #include <unistd.h>
 
+#include <functional>
+
 #include <complex>
 #include <fftw3.h>
 
