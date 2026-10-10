@@ -17,7 +17,7 @@ Syntax: `sumi [arguments]`
 
 - `-t`: use a fixed seed value for the random number generator (to generate reproducible sequences)
 
-- `-c`: number of generated elements in the time series [default is 0 which stands for infinite length]
+- `-c COUNT`: number of generated elements in the time series [default is `10`; `0` means infinite length]
 
 - `-b BS`: sets the block size for performing Fourier transforms
 
@@ -40,6 +40,9 @@ Syntax: `sumi [arguments]`
 - `-ow`: endianness conversion (e.g. little-endian to big-endian) for byte order in words
 
 - `-v`: increase verbosity (directed to stderr)
+
+- `-B B`: health-test block size; `0` disables testing [default], otherwise at least `2`
+- `-R LIMIT`: finite lower threshold for the health-test first-difference variance [default `0`]
 
 ## Overlapped pink-plus-white noise
 
@@ -68,6 +71,36 @@ and below the block frequency $1/\mathrm{BS}$ (sample spacing is one). The
 overlapped stream does not have an exact, unmodified $1/f$ spectrum at all
 frequencies. Reproducible timing, normalization, phase-statistics, and spectral
 checks are described in [test_interpolation/README.md](test_interpolation/README.md).
+
+## Health-test simulation
+
+With `-B B`, complete, non-overlapping blocks of the integer samples are tested
+using
+
+$$
+r_{\mathrm{var}}=\frac{1}{2(B-1)}\sum_{j=2}^{B}(n_j-n_{j-1})^2,
+$$
+
+where $n_j$ is the integer sample after the selected filtering and generation
+options. A block fails when $r_{\mathrm{var}}<\mathrm{LIMIT}$; equality passes.
+The test uses these integer samples regardless of the output type. For example:
+
+```sh
+./sumi -n 1 -s 1 -c 10000 -B 1000 -R 0.5 -t -ot 99
+```
+
+Here `-ot 99` suppresses sample output. The summary on stderr counts only complete
+blocks. An incomplete final block does not contribute to the pass/fail counts.
+Failed blocks are simulation results and do not themselves cause a nonzero
+process exit status.
+
+Malformed health-test options and non-finite thresholds are rejected before
+generation. When testing is enabled, a finite `-c` must be at least `-B`;
+`-c 0` permits an unlimited run. If the output pipe closes before any complete
+block has been evaluated, the program reports an error without pass/fail ratios.
+A non-finite test statistic is also a calculation error. These errors produce
+a nonzero exit status. See [test_health/README.md](test_health/README.md) for
+the focused regression checks.
 
 ## Note on floating-point to integer conversion
 

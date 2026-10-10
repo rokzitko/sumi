@@ -16,6 +16,7 @@
 #include <functional>
 #include <numbers>
 #include <vector>
+#include <stdexcept>
 
 #include <functional>
 
@@ -209,6 +210,14 @@ Gen pink_plus_white_with_interpolation(std::default_random_engine &dre, double a
   return from_spectrum_with_interpolation(dre, S, bs, false, 1.0);
 }
 
+// A non-finite statistic is a calculation error, not a passing health-test block.
+bool health_test_passes(double rvar, double limit)
+{
+  if (!std::isfinite(rvar))
+    throw std::runtime_error("Health-test variance is not finite.");
+  return rvar >= limit;
+}
+
 // A SIGPIPE is sent to a process if it tried to write to a socket that had been shutdown for writing or isn't connected (anymore).
 // https://stackoverflow.com/questions/1717991/throwing-an-exception-from-within-a-signal-handler
 jmp_buf gBuffer;
@@ -249,9 +258,34 @@ int main(int argc, char *argv[])
   verbose = input.exists("-v");
   debug = input.exists("-d");
   // Health-test simulations
-  const uint64_t test_blocksize { input.exists("-B") ? std::stoul(input.get("-B")) : 0 }; // Block size for simulating health-tests
+  uint64_t test_blocksize = 0; // Block size for simulating health-tests
+  double test_rvar_lim = 0.0; // Limiting value for raising an alarm
+  try {
+    if (input.exists("-B")) {
+      const auto arg = input.get("-B");
+      std::size_t used = 0;
+      if (arg.find('-') != std::string::npos)
+        throw std::invalid_argument("-B must be 0 or an integer of at least 2.");
+      test_blocksize = std::stoul(arg, &used);
+      if (used != arg.size() || test_blocksize == 1)
+        throw std::invalid_argument("-B must be 0 or an integer of at least 2.");
+    }
+    if (input.exists("-R")) {
+      const auto arg = input.get("-R");
+      std::size_t used = 0;
+      test_rvar_lim = std::stod(arg, &used);
+      if (used != arg.size() || !std::isfinite(test_rvar_lim))
+        throw std::invalid_argument("-R must be a finite number.");
+    }
+  } catch (const std::exception &e) {
+    std::cerr << "Error: invalid health-test options: " << e.what() << std::endl;
+    return 1;
+  }
   const bool test_enabled = test_blocksize > 0;
-  const double test_rvar_lim { input.exists("-R") ? std::stod(input.get("-R")) : 0.0 }; // Limiting value for raising an alarm
+  if (test_enabled && count != 0 && count < test_blocksize) {
+    std::cerr << "Error: -c must be 0 or at least -B when health testing is enabled." << std::endl;
+    return 1;
+  }
 
   if (verbose) {
     msg << "sumi " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
@@ -333,7 +367,7 @@ int main(int argc, char *argv[])
           if (test_i == test_blocksize) {
             test_stats_integer.stats();
             const double rvar = test_stats_integer.get_rvar();
-            if (rvar < test_rvar_lim)
+            if (!health_test_passes(rvar, test_rvar_lim))
               test_cnt_fail++;
             else
               test_cnt_pass++;
@@ -378,6 +412,10 @@ int main(int argc, char *argv[])
   }
   if (test_enabled) {
      uint64_t cnt_total = test_cnt_fail + test_cnt_pass;
+     if (cnt_total == 0) {
+       msg << "Error: health test: no complete blocks evaluated." << std::endl;
+       return 1;
+     }
      msg << "Health test: fail=" << test_cnt_fail << " pass=" << test_cnt_pass
        << " fail_ratio=" << double(test_cnt_fail)/cnt_total << " pass_ratio=" << double(test_cnt_pass)/cnt_total << std::endl;
   }

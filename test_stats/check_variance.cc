@@ -33,6 +33,12 @@ void check(Stats<> &stats, const std::vector<double> &values, const std::string 
     require(pos != std::string::npos, "missing report field " + key);
     return std::stod(text.substr(pos+key.size()));
   };
+  if (values.size() < 2)
+    for (const auto key : {"rvar=", "rdev="})
+      require(std::isnan(value(key)), label + " undefined field " + key);
+  if (values.size() < 3)
+    for (const auto key : {"avar=", "adev=", "tvar=", "tdev="})
+      require(std::isnan(value(key)), label + " undefined field " + key);
   if (values.empty()) {
     for (const auto key : {"mean=", " var=", "stddev=", "R="})
       require(std::isnan(value(key)), label + " undefined field " + key);

@@ -22,6 +22,11 @@ The standard deviation is $\sqrt{V}$. Zero-lag correlation is one for finite
 positive variance and undefined (NaN) for a constant series. Mean and variance are
 undefined for an empty sample.
 
+The first-difference quantities `rvar` and `rdev` are undefined for fewer than
+two samples. The second-difference quantities `avar` and `adev`, and the derived
+`tvar` and `tdev`, are undefined for fewer than three samples. These cases are
+reported as NaN and are included in the short-sample regression checks.
+
 `check_variance.cc` compares the public text report with an independent,
 two-pass reference calculated from deviations relative to the first sample.
 This keeps the reference stable even when the mean is large. The comparisons

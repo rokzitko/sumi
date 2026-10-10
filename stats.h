@@ -90,13 +90,14 @@ template <typename D = double>
       xprev1 = x;
     }
     void stats() {
-      mean = cnt ? meanx : std::numeric_limits<D>::quiet_NaN();
-      var = m2/cnt; // population variance
+      const auto nan = std::numeric_limits<D>::quiet_NaN();
+      mean = cnt ? meanx : nan;
+      var = cnt ? m2/cnt : nan; // population variance
       stddev = sqrt(var);
-      rvar = 0.5*sumdx2/(cnt-1); // "Rok's variance"
+      rvar = cnt > 1 ? 0.5*sumdx2/(cnt-1) : nan; // "Rok's variance"
       rdev = sqrt(rvar);
       // https://en.wikipedia.org/wiki/Allan_variance
-      avar = 0.5*sumdy2/(cnt-2); // Allen variance
+      avar = cnt > 2 ? 0.5*sumdy2/(cnt-2) : nan; // Allen variance
       adev = sqrt(avar);
       // https://en.wikipedia.org/wiki/Time_deviation
       tvar = avar/3.0; // "time deviation" (well, not quite!)
@@ -105,7 +106,6 @@ template <typename D = double>
       // https://en.wikipedia.org/wiki/Autocorrelation
       R0 = var/var; // unity for finite positive variance, undefined for a constant series
       // Full-series centering with cnt-k pair-count normalization at lag k.
-      const auto nan = std::numeric_limits<D>::quiet_NaN();
       R1 = cnt > 1 && var > 0 ? lag1.covariance(mean, cnt-1)/var : nan;
       R2 = cnt > 2 && var > 0 ? lag2.covariance(mean, cnt-2)/var : nan;
       R3 = cnt > 3 && var > 0 ? lag3.covariance(mean, cnt-3)/var : nan;
