@@ -11,6 +11,7 @@ Syntax: `sumi [arguments]`
 
 - `-n 1`: white noise [default]
 - `-n 2`: pink noise (flicker, 1/f)
+- `-n 120`: pink-plus-white noise with constant-power, half-block overlap (see below)
 
 - `-s SIGMA`: standard deviation [default is 1.0]
 
@@ -39,6 +40,34 @@ Syntax: `sumi [arguments]`
 - `-ow`: endianness conversion (e.g. little-endian to big-endian) for byte order in words
 
 - `-v`: increase verbosity (directed to stderr)
+
+## Overlapped pink-plus-white noise
+
+Mode `-n 120` combines independent FFT blocks staggered by half a block. Pass
+nonnegative amplitudes with `-ap AP` and `-aw AW`, and an even block size `-b BS`
+of at least 2. The source blocks use spectral weights
+$S(k)=\mathrm{AP}/k+\mathrm{AW}/\mathrm{BS}$, where $k=1,\ldots,\mathrm{BS}/2$
+is the FFT frequency index; the DC coefficient is zero. For example:
+
+```sh
+./sumi -n 120 -ap 0.1 -aw 1 -b 1024 -c 4096 -t
+```
+
+Set `-aw 0` for a purely pink source spectrum or `-ap 0` for a purely white
+source spectrum. In this mode, `-ap` and `-aw` set the amplitudes; `-s` does not
+rescale them.
+
+Each buffer is weighted by $w(i)=\sin(\pi i/\mathrm{BS})$ using its own sample
+index. Its weight is zero when it is regenerated. The two squared weights sum
+to one, so the ensemble variance is independent of position within the block
+and equals that of an individual source block. This is an ensemble statement,
+not a normalization of each output block.
+
+Windowing modifies temporal correlations and the spectrum, particularly near
+and below the block frequency $1/\mathrm{BS}$ (sample spacing is one). The
+overlapped stream does not have an exact, unmodified $1/f$ spectrum at all
+frequencies. Reproducible timing, normalization, phase-statistics, and spectral
+checks are described in [test_interpolation/README.md](test_interpolation/README.md).
 
 ## Note on floating-point to integer conversion
 

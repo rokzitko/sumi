@@ -14,6 +14,8 @@
 #include <math.h>
 #include <unistd.h>
 #include <functional>
+#include <numbers>
+#include <vector>
 
 #include <functional>
 
@@ -138,26 +140,25 @@ Gen from_spectrum(std::default_random_engine &dre,
   }
 }
 
-auto tent(const double x)
-{
-  if (x <= 0.5)
-    return x;
-  else
-    return 1.0-x;
-}
-
-// Linear interpolation between two generation processes. This fixes the problem that blocks of size bs are fully
-// uncorrelated which may skew some statistcs.
+// Half-block-staggered overlap of independent FFT blocks. The sine weights vanish at each buffer's regeneration
+// and their squares sum to one, preserving variance. Windowing still modifies the finite-block spectrum.
 Gen from_spectrum_with_interpolation(std::default_random_engine &dre,
                                      std::function<double(uint64_t f)> S,
                                      uint64_t bs,
                                      bool norm = false,
                                      double mult_factor = 1.0)
 {
+  assert(bs >= 2 && bs % 2 == 0);
+  std::vector<double> weight(bs);
+  for (uint64_t i = 0; i < bs; i++)
+    weight[i] = sin(std::numbers::pi*double(i)/bs);
   auto d1 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs);
   auto p1 = fftw_plan_dft_1d(bs, d1, d1, FFTW_BACKWARD, FFTW_ESTIMATE);
   auto d2 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * bs);
   auto p2 = fftw_plan_dft_1d(bs, d2, d2, FFTW_BACKWARD, FFTW_ESTIMATE);
+  // The second buffer starts halfway through its first block.
+  timmer_konig_setup(d2, bs, S, dre, norm);
+  fftw_execute(p2);
   uint64_t i1 = 0;
   uint64_t i2 = bs/2;
   for (;;) {
@@ -165,12 +166,11 @@ Gen from_spectrum_with_interpolation(std::default_random_engine &dre,
       timmer_konig_setup(d1, bs, S, dre, norm);
       fftw_execute(p1);
     }
-    if (i2 == bs/2) {
+    if (i2 == 0) {
       timmer_konig_setup(d2, bs, S, dre, norm);
       fftw_execute(p2);
     }
-    const double mix = tent(double(i1)/bs);
-    co_yield (mix*d1[i1][0]+(1.0-mix)*d2[i2][0])*mult_factor;
+    co_yield (weight[i1]*d1[i1][0]+weight[i2]*d2[i2][0])*mult_factor;
     i1 = (i1+1) % bs;
     i2 = (i2+1) % bs;
   }
@@ -381,4 +381,5 @@ int main(int argc, char *argv[])
      msg << "Health test: fail=" << test_cnt_fail << " pass=" << test_cnt_pass
        << " fail_ratio=" << double(test_cnt_fail)/cnt_total << " pass_ratio=" << double(test_cnt_pass)/cnt_total << std::endl;
   }
+  return 0;
 }
