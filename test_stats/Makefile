@@ -18,12 +18,16 @@ test3.dat: test3
 CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra -Wshadow -Wpedantic
 
 .PHONY: check
-check: check_variance.out
+check: check_variance.out check_correlation.out
 	./check_variance.out
+	./check_correlation.out
 
 check_variance.out: check_variance.cc ../stats.h ../common.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) check_variance.cc -o $@
 
+check_correlation.out: check_correlation.cc ../stats.h ../common.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) check_correlation.cc -o $@
+
 clean: 
-	rm -f test1.dat test1a.dat test2.dat test2a.dat test3.dat check_variance.out
+	rm -f test1.dat test1a.dat test2.dat test2a.dat test3.dat check_variance.out check_correlation.out
 

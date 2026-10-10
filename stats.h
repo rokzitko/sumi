@@ -12,15 +12,29 @@
 template <typename D = double>
   class Stats {
   private:
+    struct LagMoments {
+      D mean_late = 0;
+      D mean_early = 0;
+      D cross = 0; // sum of products centered on the two pair means
+      void add(const D late, const D early, uint64_t n) {
+        const auto delta_late = late-mean_late;
+        const auto delta_early = early-mean_early;
+        mean_late += delta_late/n;
+        mean_early += delta_early/n;
+        cross += delta_late*(early-mean_early);
+      }
+      D covariance(const D center, uint64_t n) const {
+        // Convert from the pair means to the full-series mean.
+        return cross/n+(mean_late-center)*(mean_early-center);
+      }
+    };
     // Accumulators
     uint64_t cnt = 0;
     D meanx = 0;   // running mean
     D m2 = 0;      // sum_i (x_i-meanx)^2
     D sumdx2 = 0;  // sum_i (x_i-x_{i-1})^2
     D sumdy2 = 0;  // sum_i (x_i-2x_{i-1}+x_{i-2})^2
-    D suma1 = 0;   // sum_i x_i x_{i-1}
-    D suma2 = 0;   // sum_i x_i x_{i-2}
-    D suma3 = 0;   // sum_i x_i x_{i-3}
+    LagMoments lag1, lag2, lag3;
     // Temporary variables
     D xprev1 = 0;
     D xprev2 = 0;
@@ -48,7 +62,8 @@ template <typename D = double>
     }
     void reset() { // reset accumulators
       cnt = 0;
-      meanx = m2 = sumdx2 = sumdy2 = suma1 = suma2 = suma3 = 0;
+      meanx = m2 = sumdx2 = sumdy2 = 0;
+      lag1 = lag2 = lag3 = {};
     }
     void add(const D x) {
       cnt++;
@@ -65,11 +80,11 @@ template <typename D = double>
         sumdy2 += q*q;
       }
       if (cnt >= 2)
-        suma1 += x*xprev1;
+        lag1.add(x, xprev1, cnt-1);
       if (cnt >= 3)
-        suma2 += x*xprev2;
+        lag2.add(x, xprev2, cnt-2);
       if (cnt >= 4)
-        suma3 += x*xprev3;
+        lag3.add(x, xprev3, cnt-3);
       xprev3 = xprev2;
       xprev2 = xprev1;
       xprev1 = x;
@@ -89,9 +104,11 @@ template <typename D = double>
       // serial correlation coefficients
       // https://en.wikipedia.org/wiki/Autocorrelation
       R0 = var/var; // unity for finite positive variance, undefined for a constant series
-      R1 = (suma1/(cnt-1)-mean*mean)/var;
-      R2 = (suma2/(cnt-2)-mean*mean)/var;
-      R3 = (suma3/(cnt-3)-mean*mean)/var;
+      // Full-series centering with cnt-k pair-count normalization at lag k.
+      const auto nan = std::numeric_limits<D>::quiet_NaN();
+      R1 = cnt > 1 && var > 0 ? lag1.covariance(mean, cnt-1)/var : nan;
+      R2 = cnt > 2 && var > 0 ? lag2.covariance(mean, cnt-2)/var : nan;
+      R3 = cnt > 3 && var > 0 ? lag3.covariance(mean, cnt-3)/var : nan;
     }
     D get_rvar() {
        return rvar;
