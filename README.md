@@ -129,6 +129,24 @@ Truncation does not maintain the even/odd sequence across the zero point.
 
 `bitent` is a tool for calculating Shannon and minimal entropy for a bit series.
 
+Input is packed binary data from stdin, or from a file selected with `-i FILE`.
+The default input word size is 8 bits, read least-significant bit first.
+`-n N` sets the sliding-window length in bits [default `1`]; `-c COUNT` limits
+the number of complete windows counted [default `0`, meaning until EOF].
+`-t` prints the full probability table, including unobserved words with zero
+probability. `-x 0` omits the run-length report. For example:
+
+```sh
+./sumi -n 1 -s 1 -t -c 4096 -ot 8 | ./bitent -ws 8 -n 3 -x 0 -t
+```
+
+Shannon entropy uses the convention $0\log_2 0=0$. If no complete window is
+available, the program reports an error and exits with status 1 without a
+probability or entropy report. Otherwise, it calculates empirical window
+entropies from the windows actually observed, even if EOF occurs before the
+`-c` limit. See [test_bitent/README.md](test_bitent/README.md) for the definitions
+and regression checks.
+
 Sample outout:
 
 ```

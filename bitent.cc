@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   const int ws { input.exists("-ws") ? std::stoi(input.get("-ws")) : 8 }; // word size in bits (8, 16, 32, 64)
   const Direction id { input.exists("-id") ? std::stoi(input.get("-id")) : 1 }; // default is 1 (lsb to msb)
   const bool iw = input.exists("-iw"); // byte swap for binary input (endianness change)
-  const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 0 }; // number of random numbers read, 0 = infinite (until EOF)
+  const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 0 }; // maximum number of windows counted, 0 = until EOF
   const uint64_t n { input.exists("-n") ? std::stoul(input.get("-n")) : 1 }; // size of sliding window
   const uint64_t maxlen { input.exists("-x") ? std::stoul(input.get("-x")) : 32 }; // maxlen for counting zeros and ones
   verbose = input.exists("-v");
@@ -123,6 +123,10 @@ int main(int argc, char *argv[])
   }
 
   uint64_t nr = std::accumulate(acc.begin(), acc.end(), uint64_t(0));
+  if (nr == 0) {
+    std::cerr << "Error: no complete " << n << "-bit window was read (" << nrread << " bits read)." << std::endl;
+    return 1;
+  }
   show_with_logs(std::cout, "nr", nr);
 
   std::vector<double> P(bins); // probabilities
@@ -157,6 +161,7 @@ int main(int argc, char *argv[])
   double HA = 0.0;
   double HminA = std::numeric_limits<double>::max();
   for (uint64_t i = 0; i < bins; i++) {
+    if (P[i] == 0.0) continue; // use the convention 0*log2(0)=0
     HA += -log2(P[i])*P[i];
     HminA = std::min(HminA, -log2(P[i]));
   }
