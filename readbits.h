@@ -12,7 +12,7 @@
 
 class EOF_exception : public std::exception {
  public:
-   const char *what () {
+   const char *what () const noexcept {
      return "End of file reached";
    }
 };

@@ -13,6 +13,7 @@
 #include <csetjmp>
 #include <math.h>
 #include <unistd.h>
+#include <functional>
 
 #include <functional>
 
@@ -219,7 +220,7 @@ void catch_signal(int signalNumber)
 
 class pipe_exception : public std::exception {
  public:
-   const char *what () {
+   const char *what () const noexcept {
      return "Pipe close by the receiving end";
    }
 };
