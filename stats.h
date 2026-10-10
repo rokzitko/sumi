@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdint>
 #include <cmath>
+#include <limits>
 
 #include "common.h"
 
@@ -13,8 +14,8 @@ template <typename D = double>
   private:
     // Accumulators
     uint64_t cnt = 0;
-    D sumx = 0;    // sum_i x_i
-    D sumx2 = 0;   // sum_i x_i^2
+    D meanx = 0;   // running mean
+    D m2 = 0;      // sum_i (x_i-meanx)^2
     D sumdx2 = 0;  // sum_i (x_i-x_{i-1})^2
     D sumdy2 = 0;  // sum_i (x_i-2x_{i-1}+x_{i-2})^2
     D suma1 = 0;   // sum_i x_i x_{i-1}
@@ -47,12 +48,14 @@ template <typename D = double>
     }
     void reset() { // reset accumulators
       cnt = 0;
-      sumx = sumx2 = sumdx2 = sumdy2 = suma1 = suma2 = suma3 = 0;
+      meanx = m2 = sumdx2 = sumdy2 = suma1 = suma2 = suma3 = 0;
     }
     void add(const D x) {
       cnt++;
-      sumx += x;
-      sumx2 += x*x;
+      // Welford update avoids subtracting large, nearly equal second moments.
+      const auto delta = x-meanx;
+      meanx += delta/cnt;
+      m2 += delta*(x-meanx);
       if (cnt >= 2) {
         auto q = x-xprev1;
         sumdx2 += q*q;
@@ -72,8 +75,8 @@ template <typename D = double>
       xprev1 = x;
     }
     void stats() {
-      mean = sumx/cnt;
-      var = sumx2/cnt-mean*mean;
+      mean = cnt ? meanx : std::numeric_limits<D>::quiet_NaN();
+      var = m2/cnt; // population variance
       stddev = sqrt(var);
       rvar = 0.5*sumdx2/(cnt-1); // "Rok's variance"
       rdev = sqrt(rvar);
@@ -85,7 +88,7 @@ template <typename D = double>
       tdev = sqrt(tvar);
       // serial correlation coefficients
       // https://en.wikipedia.org/wiki/Autocorrelation
-      R0 = (sumx2/cnt-mean*mean)/var;
+      R0 = var/var; // unity for finite positive variance, undefined for a constant series
       R1 = (suma1/(cnt-1)-mean*mean)/var;
       R2 = (suma2/(cnt-2)-mean*mean)/var;
       R3 = (suma3/(cnt-3)-mean*mean)/var;
