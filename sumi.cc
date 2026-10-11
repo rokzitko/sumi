@@ -286,6 +286,12 @@ int main(int argc, char *argv[])
     std::cerr << "Error: -c must be 0 or at least -B when health testing is enabled." << std::endl;
     return 1;
   }
+  if (flt < IntFilter::round || flt > IntFilter::trunc) {
+    std::cerr << "Error: integer filter -f must be 0, 1, 2, or 3." << std::endl;
+    return 1;
+  }
+  // No-output mode retains quantization for the bit-generation benchmarks.
+  const bool integer_needed = ot != OutputType::floating || carry || stats || test_enabled;
 
   if (verbose) {
     msg << "sumi " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
@@ -350,11 +356,13 @@ int main(int argc, char *argv[])
     if (setjmp(gBuffer) == 0) {
       for (uint64_t i = 0; i < count || count == 0; i++) {
         double value = (*gen)() + mu;
-        total += value;
+        if (additive) total += value;
         double x = additive ? total : value; // in additive mode, we analyse the accumulated sum rather than consecutive values
         if (carry) x += frac; // in carry over mode, add the fractional part of the previous x
-        int n = filter(x, flt);
-        frac = x-n;
+        if (!std::isfinite(x))
+          throw std::runtime_error("Generated sample is not finite.");
+        int n = integer_needed ? filter(x, flt) : 0;
+        if (carry) frac = x-n;
         bool b = n%2 != 0; // random bit; handles -1, too!
         if (stats) {
           stats_floating.add(x);

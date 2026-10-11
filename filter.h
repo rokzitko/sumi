@@ -1,6 +1,11 @@
 #ifndef _filter_h_
 #define _filter_h_
 
+#include <cmath>
+#include <limits>
+#include <stdexcept>
+#include <string>
+
 enum class IntFilter {
   round = 0,
   floor = 1,
@@ -27,24 +32,31 @@ std::string name(IntFilter i)
 
 auto filter(double x, IntFilter flt)
 {
-  int n;
+  if (!std::isfinite(x))
+    throw std::domain_error("Cannot convert a non-finite sample to integer.");
+  double n;
   switch (flt) {
   case IntFilter::round:
-    n = round(x);
+    n = std::round(x);
     break;
   case IntFilter::floor:
-    n = floor(x);
+    n = std::floor(x);
     break;
   case IntFilter::ceil:
-    n = ceil(x);
+    n = std::ceil(x);
     break;
   case IntFilter::trunc:
-    n = trunc(x);
+    n = std::trunc(x);
     break;
   default:
-    assert(false);
+    throw std::invalid_argument("Unknown integer filter; use -f 0, 1, 2, or 3.");
   }
-  return n;
+  // Check the filtered result. The exclusive upper bound is exactly representable.
+  const double lower = std::numeric_limits<int>::min();
+  const double upper = -lower;
+  if (n < lower || n >= upper)
+    throw std::out_of_range("Filtered sample is outside the integer range.");
+  return static_cast<int>(n);
 }
 
 #endif

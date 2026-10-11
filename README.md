@@ -33,6 +33,7 @@ Syntax: `sumi [arguments]`
 - `-ot 16`: binary packed with consecutive bits, 16-bit words
 - `-ot 32`: binary packed with consecutive bits, 32-bit words
 - `-ot 64`: binary packed with consecutive bits, 64-bit words
+- `-ot 99`: no sample output; retains integer conversion for bit-generation benchmarks
 
 - `-od 1`: LSB to MSB bit order within words (default)
 - `-od 2`: MSB to LSB bit order within words
@@ -103,6 +104,19 @@ a nonzero exit status. See [test_health/README.md](test_health/README.md) for
 the focused regression checks.
 
 ## Note on floating-point to integer conversion
+
+The selected filter is applied before checking the integer range. Its result
+must fit the signed `int` type (−2147483648 through 2147483647 on the supported
+macOS/Linux builds). `-f 0` rounds halfway values away from zero. Non-finite
+samples and out-of-range integer results produce an error and exit status 1.
+Processing stops at the first invalid sample; earlier output may already have
+been written.
+
+Plain floating output (`-ot -1`) accepts larger finite values and skips integer
+conversion. Conversion is required by integer/bit output, `-carry`, `-stats`
+(which includes integer and bit statistics), and enabled health tests. Mode
+`-ot 99` also performs conversion. In `-add` mode, the accumulated value is
+checked. See [test_filter/README](test_filter/README) for the regression checks.
 
 See (https://cplusplus.com/reference/cmath/trunc/) for details on rounding of floating point
 numbers.

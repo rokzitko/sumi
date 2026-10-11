@@ -1,1 +1,58 @@
 Note the test failures in the trunc mode.
+
+Focused conversion checks
+=========================
+
+Build sumi, then run the focused checks from the repository root:
+
+    make sumi
+    make -C test_filter check
+
+For Apple Clang and FFTW located through pkg-config:
+
+    make sumi CXX=clang++ \
+      CXXFLAGS="-std=c++20 -O3 -Werror -Wall -Wextra -Wshadow -Wpedantic $(pkg-config --cflags fftw3)" \
+      FFTW="$(pkg-config --libs fftw3)"
+    make -C test_filter check CXX=clang++
+
+The C++ filter checks require a C++20 compiler and no FFTW. The CLI checks use
+the compiled sumi executable and Python 3.7 or later (standard library only). The suite
+creates check.out and keeps generated samples in memory. The existing dieharder
+scripts and saved reports concern the statistical consequences of the filters.
+
+Conversion rules
+================
+
+Round, floor, ceil, and trunc operate in floating point first. The resulting
+integer-valued double is checked against the signed int range before casting.
+The upper bound is exclusive and exactly representable in double. Zero, including
+negative zero, converts to integer zero; halfway rounding is away from zero.
+For example, INT_MAX + 0.25 is valid with floor and trunc, while ceil rejects it.
+
+Integer/bit output, carry mode, all-statistics reporting, and health tests require
+integer conversion. No-output mode (-ot 99) retains this work for the existing
+bit-generation benchmarks. Floating-only output bypasses conversion and accepts
+finite values outside the int range. Non-finite processed samples are rejected
+in all modes; additive overflow is checked on the accumulated value. The process
+stops with status 1 before emitting an invalid sample.
+
+Coverage
+========
+
+check.cc tests all four filters, positive and negative values, halfway cases,
+subnormal values, int endpoints, and neighboring representable floating-point
+values. It checks valid results for inputs just outside the raw int range,
+rejection of out-of-range filtered results, NaN/infinities, and unknown filters.
+The return type remains int. --valid-only runs the representable-result subset.
+
+check.py uses a zero-spectrum generator to supply exact constants through the
+actual CLI. It covers integer and packed-bit outputs, negative parity, floating
+values beyond the integer range, conversion-dependent options, and failures
+during additive/carry processing. Unknown filter codes are rejected even in
+floating-only mode. These inputs are deterministic, including exact halfway
+values; no zero-width normal distribution is used. Floating text comparisons
+allow the existing six-significant-digit rounding (relative tolerance 5e-6).
+
+To run the CLI checks against another executable:
+
+    python3 test_filter/check.py --sumi ./sumi
