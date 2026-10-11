@@ -14,10 +14,16 @@ test3-long.dat:
 
 PYTHON ?= python3
 BITENT ?= ../bitent
+CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra -Wshadow -Wpedantic
 
 .PHONY: check
-check:
+check: check_sizes.out
+	./check_sizes.out
 	$(PYTHON) check_entropy.py --bitent $(BITENT)
+	$(PYTHON) check_runs.py --bitent $(BITENT)
+
+check_sizes.out: check_sizes.cc ../bitent.cc ../version.h $(wildcard ../*.h)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) check_sizes.cc -o $@
 
 clean:
-	rm -f *.dat
+	rm -f *.dat check_sizes.out

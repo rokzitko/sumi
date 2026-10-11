@@ -131,10 +131,12 @@ Truncation does not maintain the even/odd sequence across the zero point.
 
 Input is packed binary data from stdin, or from a file selected with `-i FILE`.
 The default input word size is 8 bits, read least-significant bit first.
-`-n N` sets the sliding-window length in bits [default `1`]; `-c COUNT` limits
+`-n N` sets the sliding-window length in bits [`1`–`30`, default `1`]; `-c COUNT` limits
 the number of complete windows counted [default `0`, meaning until EOF].
 `-t` prints the full probability table, including unobserved words with zero
-probability. `-x 0` omits the run-length report. For example:
+probability. `-x X` reports all-zero/all-one window counts for lengths `1` through
+`X` [default `32`]; `-x 0` omits this report. Run counts include every processed
+bit, including the prefix before the first histogram window is complete. For example:
 
 ```sh
 ./sumi -n 1 -s 1 -t -c 4096 -ot 8 | ./bitent -ws 8 -n 3 -x 0 -t
@@ -146,6 +148,11 @@ probability or entropy report. Otherwise, it calculates empirical window
 entropies from the windows actually observed, even if EOF occurs before the
 `-c` limit. See [test_bitent/README.md](test_bitent/README.md) for the definitions
 and regression checks.
+
+Histogram storage grows as $16\cdot 2^N$ bytes for the count and probability
+arrays: about 16 MiB at `-n 20`, 256 MiB at `-n 24`, and 16 GiB at `-n 30`.
+Run arrays require about $64(X+1)$ additional bytes. Sizes are checked before
+allocation; C++ allocation failures are reported as errors with exit status 1.
 
 Sample outout:
 

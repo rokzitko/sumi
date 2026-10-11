@@ -8,6 +8,7 @@
 #include <random>
 #include <bitset>
 #include <stdexcept>
+#include <new>
 #include <algorithm>
 #include <limits>
 #include <ctime>
@@ -37,7 +38,36 @@ std::string bits(uint64_t n, int len) {
   return s;
 }
 
-int main(int argc, char *argv[])
+uint64_t parse_size_option(const InputParser &input, const std::string &option, uint64_t fallback)
+{
+  if (!input.exists(option)) return fallback;
+  const auto arg = input.get(option);
+  if (arg.empty() || arg.find('-') != std::string::npos)
+    throw std::invalid_argument(option + " must be a nonnegative integer.");
+  std::size_t used = 0;
+  const auto value = std::stoul(arg, &used);
+  if (used != arg.size())
+    throw std::invalid_argument(option + " must be a nonnegative integer.");
+  return value;
+}
+
+uint64_t histogram_bins(uint64_t n)
+{
+  if (n < 1 || n > 30)
+    throw std::invalid_argument("-n must be between 1 and 30.");
+  return uint64_t{1} << n;
+}
+
+std::size_t run_array_size(uint64_t maxlen)
+{
+  const auto capacity = std::min(vc{}.max_size(), std::vector<double>{}.max_size());
+  // Check before adding one, so an excessive -x cannot wrap to a zero-sized array.
+  if (maxlen >= capacity)
+    throw std::length_error("-x is too large for the run arrays.");
+  return static_cast<std::size_t>(maxlen)+1;
+}
+
+int main(int argc, char *argv[]) try
 {
   InputParser input(argc, argv);
 
@@ -46,14 +76,15 @@ int main(int argc, char *argv[])
   const Direction id { input.exists("-id") ? std::stoi(input.get("-id")) : 1 }; // default is 1 (lsb to msb)
   const bool iw = input.exists("-iw"); // byte swap for binary input (endianness change)
   const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 0 }; // maximum number of windows counted, 0 = until EOF
-  const uint64_t n { input.exists("-n") ? std::stoul(input.get("-n")) : 1 }; // size of sliding window
-  const uint64_t maxlen { input.exists("-x") ? std::stoul(input.get("-x")) : 32 }; // maxlen for counting zeros and ones
+  const uint64_t n { parse_size_option(input, "-n", 1) }; // size of sliding window
+  const uint64_t maxlen { parse_size_option(input, "-x", 32) }; // maxlen for counting zeros and ones
   verbose = input.exists("-v");
   debug = input.exists("-d");
   const bool print_table { input.exists("-t") }; // table of probabilities and counts
 
-  const uint64_t bins = 1<<n;
+  const uint64_t bins = histogram_bins(n);
   const uint64_t mask = bins-1;
+  const auto run_size = run_array_size(maxlen);
 
   if (verbose) {
     msg << "bitent " << GIT_HASH << " " << __DATE__ << " " << __TIME__ << std::endl;
@@ -73,9 +104,9 @@ int main(int argc, char *argv[])
   uint64_t ones { 0 };
   uint64_t zeros { 0 };
   bool prev { false };
-  std::vector<uint64_t> cntones(maxlen+1, 0);
-  std::vector<uint64_t> cntzeros(maxlen+1, 0);
-  std::vector<uint64_t> cntother(maxlen+1, 0);
+  std::vector<uint64_t> cntones(run_size, 0);
+  std::vector<uint64_t> cntzeros(run_size, 0);
+  std::vector<uint64_t> cntother(run_size, 0);
   for (uint64_t i = 0; i < count || count == 0;) { // i not updated here!
    try {
      bool b = (*gen)();
@@ -86,7 +117,7 @@ int main(int argc, char *argv[])
        acc[symbol]++;
        i++;
      }
-     if (i && b) {
+     if (b) {
        if (prev) {
          ones++;
        } else {
@@ -94,7 +125,7 @@ int main(int argc, char *argv[])
          zeros=0;
        }
      }
-     if (i && !b) {
+     if (!b) {
        if (!prev) {
          zeros++;
        } else {
@@ -103,7 +134,7 @@ int main(int argc, char *argv[])
        }
      }
      prev = b;
-     for (unsigned int j = 1; j <= maxlen; j++) {
+     for (uint64_t j = 1; j <= maxlen; j++) {
        if (nrread >= j) {
          if (ones >= j)
            cntones[j]++;
@@ -170,19 +201,24 @@ int main(int argc, char *argv[])
   std::cout << "H=" << HA << " = " << HAperbit << " per bit"
     << "   Hmin=" << HminA << " = " << HminAperbit << " per bit" << std::endl;
 
-  std::vector<uint64_t> cnttotal(maxlen+1, 0);
-  std::vector<double> cntP0(maxlen+1, 0);
-  std::vector<double> cntP1(maxlen+1, 0);
-  std::vector<double> cntHmin(maxlen+1, 0);
-  std::vector<double> cntHminperbit(maxlen+1, 0);
+  std::vector<uint64_t> cnttotal(run_size, 0);
+  std::vector<double> cntP0(run_size, 0);
+  std::vector<double> cntP1(run_size, 0);
+  std::vector<double> cntHmin(run_size, 0);
+  std::vector<double> cntHminperbit(run_size, 0);
   double Hminpbmin = std::numeric_limits<double>::max();
   const uint64_t atleast = 1000;
-  for (unsigned int j = 1; j <= maxlen; j++) {
+  for (uint64_t j = 1; j <= maxlen; j++) {
     cnttotal[j] = cntones[j]+cntzeros[j]+cntother[j];
-    cntP0[j] = double(cntzeros[j])/cnttotal[j];
-    cntP1[j] = double(cntones[j])/cnttotal[j];
-    cntHmin[j] = -log2(std::max(cntP0[j], cntP1[j]));
-    cntHminperbit[j] = cntHmin[j]/j;
+    if (cnttotal[j] == 0) {
+      cntP0[j] = cntP1[j] = cntHmin[j] = cntHminperbit[j] = std::numeric_limits<double>::quiet_NaN();
+    } else {
+      cntP0[j] = double(cntzeros[j])/cnttotal[j];
+      cntP1[j] = double(cntones[j])/cnttotal[j];
+      const auto pmax = std::max(cntP0[j], cntP1[j]);
+      cntHmin[j] = pmax > 0 ? -log2(pmax) : std::numeric_limits<double>::infinity();
+      cntHminperbit[j] = cntHmin[j]/j;
+    }
     std::cout << "len=" << std::setw(3) << j << " "
       << " 0:nr=" << cntzeros[j] << ",p=" << cntP0[j]
       << " 1:nr=" << cntones[j]  << ",p=" << cntP1[j]
@@ -193,4 +229,11 @@ int main(int argc, char *argv[])
 
   const double Hminperbit = std::min(HminAperbit, Hminpbmin);
   std::cout << "Hmin = " << Hminperbit << " per bit" << std::endl;
+  return 0;
+} catch (const std::bad_alloc &) {
+  std::cerr << "Error: memory allocation failed; reduce -n or -x." << std::endl;
+  return 1;
+} catch (const std::exception &e) {
+  std::cerr << "Error: " << e.what() << std::endl;
+  return 1;
 }
