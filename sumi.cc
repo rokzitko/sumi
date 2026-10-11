@@ -56,7 +56,7 @@ std::string name(NoiseType nt) {
   case pink_plus_white_with_interpolation:
     return "pink+white with interpolation";
   default:
-    assert(0);
+    throw std::invalid_argument("Unknown noise type.");
   }
 }
 
@@ -234,60 +234,41 @@ class pipe_exception : public std::exception {
    }
 };
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) try
 {
   InputParser input(argc, argv);
+  input.validate_options({"-n", "-ap", "-aw", "-s", "-cut", "-mu", "-c", "-b", "-f", "-ot", "-od", "-B", "-R"},
+                         {"-add", "-carry", "-t", "-ow", "-stats", "-v", "-d"});
 
-  const NoiseType nt { input.exists("-n") ? std::stoi(input.get("-n")) : 1 };  // noise type (pink, white, etc.)
-  const double ap { input.exists("-ap") ? std::stod(input.get("-ap")) : -1 };  // prefactors ap,aw in S(f)=ap/f+aw
-  const double aw { input.exists("-aw") ? std::stod(input.get("-aw")) : 0.0 }; // prefactors ap,aw in S(f)=ap/f+aw
-  const double sigma { input.exists("-s") ? std::stod(input.get("-s")) : 1.0 }; // standard deviation of generated noise
-  const double f_cutoff { input.exists("-cut") ? std::stod(input.get("-cut")) : 0.5 }; // cutoff frequency for mixed type spectra
+  const NoiseType nt { input.get_choice("-n", 1, {1, 2, 3, 12, 120}) };  // noise type (pink, white, etc.)
+  const double ap { input.get_double("-ap", -1) };  // prefactors ap,aw in S(f)=ap/f+aw
+  const double aw { input.get_double("-aw", 0.0) }; // prefactors ap,aw in S(f)=ap/f+aw
+  const double sigma { input.get_double("-s", 1.0) }; // standard deviation of generated noise
+  const double f_cutoff { input.get_double("-cut", 0.5) }; // cutoff frequency for mixed type spectra
   const double mu { input.get_double("-mu", 0.0) }; // shift all variates by mu
   const bool additive { input.exists("-add") }; // if true, return values are accumulated variates
   const bool carry { input.exists("-carry") }; // if true, fractional part of current x is added to the next x
   const bool testing_mode { input.exists("-t") }; // use fixed seed for rng generator to generate reproducible sequences for testing
-  const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 10 }; // number of random numbers generated, 0 = infinite
-  const uint64_t bs { input.exists("-b") ? std::stoul(input.get("-b")) : 1<<10 }; // block size in FFT
-  const IntFilter flt { input.exists("-f") ? std::stoi(input.get("-f")) : 0 }; // filtering for floating point to integer conversion (default=rounding)
-  const OutputType ot { input.exists("-ot") ? std::stoi(input.get("-ot")) : -1 }; // floating, integer, bit, binary (default is floating point)
+  const uint64_t count { input.get_uint64("-c", 10) }; // number of random numbers generated, 0 = infinite
+  const uint64_t bs { input.get_uint64("-b", 1<<10) }; // block size in FFT
+  const IntFilter flt { input.get_choice("-f", 0, {0, 1, 2, 3}) }; // filtering for floating point to integer conversion (default=rounding)
+  const OutputType ot { input.get_choice("-ot", -1, {-1, 0, 1, 8, 16, 32, 64, 99}) }; // floating, integer, bit, binary (default is floating point)
   auto ws = get_ws(ot);
-  const Direction od { input.exists("-od") ? std::stoi(input.get("-od")) : 1 }; // 1=lsb to msb, 2=msb to lsb
+  const Direction od { input.get_choice("-od", 1, {1, 2}) }; // 1=lsb to msb, 2=msb to lsb
   const bool ow { input.exists("-ow") }; // byte swap for binary output (endianness change)
   const bool stats { input.exists("-stats") };
   verbose = input.exists("-v");
   debug = input.exists("-d");
   // Health-test simulations
-  uint64_t test_blocksize = 0; // Block size for simulating health-tests
-  double test_rvar_lim = 0.0; // Limiting value for raising an alarm
-  try {
-    if (input.exists("-B")) {
-      const auto arg = input.get("-B");
-      std::size_t used = 0;
-      if (arg.find('-') != std::string::npos)
-        throw std::invalid_argument("-B must be 0 or an integer of at least 2.");
-      test_blocksize = std::stoul(arg, &used);
-      if (used != arg.size() || test_blocksize == 1)
-        throw std::invalid_argument("-B must be 0 or an integer of at least 2.");
-    }
-    if (input.exists("-R")) {
-      const auto arg = input.get("-R");
-      std::size_t used = 0;
-      test_rvar_lim = std::stod(arg, &used);
-      if (used != arg.size() || !std::isfinite(test_rvar_lim))
-        throw std::invalid_argument("-R must be a finite number.");
-    }
-  } catch (const std::exception &e) {
-    std::cerr << "Error: invalid health-test options: " << e.what() << std::endl;
+  const uint64_t test_blocksize { input.get_uint64("-B", 0) }; // Block size for simulating health-tests
+  const double test_rvar_lim { input.get_double("-R", 0.0) }; // Limiting value for raising an alarm
+  if (test_blocksize == 1) {
+    std::cerr << "Error: -B must be 0 or an integer of at least 2." << std::endl;
     return 1;
   }
   const bool test_enabled = test_blocksize > 0;
   if (test_enabled && count != 0 && count < test_blocksize) {
     std::cerr << "Error: -c must be 0 or at least -B when health testing is enabled." << std::endl;
-    return 1;
-  }
-  if (flt < IntFilter::round || flt > IntFilter::trunc) {
-    std::cerr << "Error: integer filter -f must be 0, 1, 2, or 3." << std::endl;
     return 1;
   }
   // No-output mode retains quantization for the bit-generation benchmarks.
@@ -428,4 +409,7 @@ int main(int argc, char *argv[])
        << " fail_ratio=" << double(test_cnt_fail)/cnt_total << " pass_ratio=" << double(test_cnt_pass)/cnt_total << std::endl;
   }
   return 0;
+} catch (const std::exception &e) {
+  std::cerr << "Error: " << e.what() << std::endl;
+  return 1;
 }

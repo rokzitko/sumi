@@ -9,6 +9,15 @@ J. Timmer, M. Koenig, "On generating power law noise", Astronomy and astrophysic
 
 Syntax: `sumi [arguments]`
 
+All three tools reject unknown options, missing values, repeated value-taking
+options, and unsupported numeric codes. Repeated switches such as `-v -v` are
+accepted. Numeric values must be parsed completely; floating-point arguments
+must be finite, and counts/sizes must be nonnegative integers. Violations of
+these argument rules produce an error on stderr and exit status 1 before
+processing samples or input.
+A filename equal to an option name can be given as a path, for example `./-v`.
+Focused checks are described in [test_cli/README.md](test_cli/README.md).
+
 - `-n 1`: white noise [default]
 - `-n 2`: pink noise (flicker, 1/f)
 - `-n 120`: pink-plus-white noise with constant-power, half-block overlap (see below)

@@ -2,6 +2,7 @@
 #define _common_h_
 
 #include <cassert>
+#include <stdexcept>
 
 // Consecutive bit ordering within words
 enum class Direction {
@@ -18,7 +19,7 @@ std::string name(Direction d)
   case ml:
     return "MSB to LSB";
   default:
-    assert(0);
+    throw std::invalid_argument("Unknown bit direction.");
   }
 }
 
@@ -70,7 +71,7 @@ std::string name(OutputType ot) {
   case none:
     return "no output";
   default:
-    assert(0);
+    throw std::invalid_argument("Unknown output type.");
   }
 }
 

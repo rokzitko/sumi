@@ -9,6 +9,11 @@
 #include <vector>
 #include <algorithm>
 #include <coroutine>
+#include <cmath>
+#include <cstdint>
+#include <initializer_list>
+#include <limits>
+#include <stdexcept>
 
 // Simple command line parser
 // https://stackoverflow.com/questions/865668/parsing-command-line-arguments-in-c
@@ -17,6 +22,26 @@ class InputParser {
    InputParser (int argc, char *argv[]) {
      for (int i = 1; i < argc; ++i)
        this->tokens.push_back(std::string(argv[i]));
+   }
+   void validate_options(std::initializer_list<std::string> values,
+                         std::initializer_list<std::string> switches) const {
+     auto contains = [](const auto &options, const std::string &option) {
+       return std::find(options.begin(), options.end(), option) != options.end();
+     };
+     std::vector<std::string> seen;
+     for (std::size_t i = 0; i < tokens.size(); i++) {
+       const auto &option = tokens[i];
+       if (contains(values, option)) {
+         if (contains(seen, option))
+           throw std::invalid_argument(option + " may only be specified once.");
+         if (i+1 == tokens.size() || contains(values, tokens[i+1]) || contains(switches, tokens[i+1]))
+           throw std::invalid_argument("Missing value for " + option + ".");
+         seen.push_back(option);
+         i++; // Values are not options, including negative numbers and filenames.
+       } else if (!contains(switches, option)) {
+         throw std::invalid_argument("Unknown option or argument '" + option + "'.");
+       }
+     }
    }
    std::string get(const std::string &option) const {
      auto itr = std::find(this->tokens.begin(), this->tokens.end(), option);
@@ -27,13 +52,55 @@ class InputParser {
    bool exists(const std::string &option) const {
      return std::find(this->tokens.begin(), this->tokens.end(), option) != this->tokens.end();
    }
+   int get_int(const std::string &option, int def) const {
+     if (!exists(option)) return def;
+     const auto arg = get(option);
+     try {
+       std::size_t used = 0;
+       const auto value = std::stoi(arg, &used);
+       if (used == arg.size()) return value;
+     } catch (const std::invalid_argument &) {
+     } catch (const std::out_of_range &) {
+     }
+     throw std::invalid_argument(option + " requires an integer in the int range.");
+   }
+   uint64_t get_uint64(const std::string &option, uint64_t def) const {
+     if (!exists(option)) return def;
+     const auto arg = get(option);
+     if (arg.find('-') == std::string::npos) {
+       try {
+         std::size_t used = 0;
+         const auto value = std::stoull(arg, &used);
+         if (used == arg.size() && value <= std::numeric_limits<uint64_t>::max()) return value;
+       } catch (const std::invalid_argument &) {
+       } catch (const std::out_of_range &) {
+       }
+     }
+     throw std::invalid_argument(option + " requires a nonnegative 64-bit integer.");
+   }
+   int get_choice(const std::string &option, int def, std::initializer_list<int> choices) const {
+     const auto value = get_int(option, def);
+     if (std::find(choices.begin(), choices.end(), value) != choices.end()) return value;
+     std::string message = option + " must be one of";
+     for (const auto choice : choices) message += " " + std::to_string(choice);
+     throw std::invalid_argument(message + ".");
+   }
 //   template <typename T>
 //     T get(const std::string &option, const T def) const {
 //       return exists(option) ? T(get(option)) : def;
 //     }
    auto get_double(const std::string &option, const double def) const {
-       return exists(option) ? std::stod(get(option)) : def;
+     if (!exists(option)) return def;
+     const auto arg = get(option);
+     try {
+       std::size_t used = 0;
+       const auto value = std::stod(arg, &used);
+       if (used == arg.size() && std::isfinite(value)) return value;
+     } catch (const std::invalid_argument &) {
+     } catch (const std::out_of_range &) {
      }
+     throw std::invalid_argument(option + " requires a finite floating-point number.");
+   }
  private:
    std::vector<std::string> tokens;
 };

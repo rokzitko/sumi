@@ -32,7 +32,7 @@ diff test1lsb_64lm.dat test1lsb_64lm.dat.ref || exit 1
 ../sumi -v -n 2 -c 1024 -b 1024 -ot 64 -od 2 -t >test1lsb_64ml.dat
 diff test1lsb_64ml.dat test1lsb_64ml.dat.ref || exit 1
 
-../sumi -v -n 2 -c 1024 -o 99 >test1none.dat
+../sumi -v -n 2 -c 1024 -ot 99 >test1none.dat
 
 diff test1lsb_8lm.dat test1lsb_16lm.dat || exit 1
 diff test1lsb_16lm.dat test1lsb_32lm.dat || exit 1

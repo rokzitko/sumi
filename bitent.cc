@@ -38,19 +38,6 @@ std::string bits(uint64_t n, int len) {
   return s;
 }
 
-uint64_t parse_size_option(const InputParser &input, const std::string &option, uint64_t fallback)
-{
-  if (!input.exists(option)) return fallback;
-  const auto arg = input.get(option);
-  if (arg.empty() || arg.find('-') != std::string::npos)
-    throw std::invalid_argument(option + " must be a nonnegative integer.");
-  std::size_t used = 0;
-  const auto value = std::stoul(arg, &used);
-  if (used != arg.size())
-    throw std::invalid_argument(option + " must be a nonnegative integer.");
-  return value;
-}
-
 uint64_t histogram_bins(uint64_t n)
 {
   if (n < 1 || n > 30)
@@ -70,14 +57,15 @@ std::size_t run_array_size(uint64_t maxlen)
 int main(int argc, char *argv[]) try
 {
   InputParser input(argc, argv);
+  input.validate_options({"-i", "-ws", "-id", "-c", "-n", "-x"}, {"-iw", "-v", "-d", "-t"});
 
   const std::string filename { input.exists("-i") ? input.get("-i") : "" };
-  const int ws { input.exists("-ws") ? std::stoi(input.get("-ws")) : 8 }; // word size in bits (8, 16, 32, 64)
-  const Direction id { input.exists("-id") ? std::stoi(input.get("-id")) : 1 }; // default is 1 (lsb to msb)
+  const int ws { input.get_choice("-ws", 8, {8, 16, 32, 64}) }; // word size in bits (8, 16, 32, 64)
+  const Direction id { input.get_choice("-id", 1, {1, 2}) }; // default is 1 (lsb to msb)
   const bool iw = input.exists("-iw"); // byte swap for binary input (endianness change)
-  const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 0 }; // maximum number of windows counted, 0 = until EOF
-  const uint64_t n { parse_size_option(input, "-n", 1) }; // size of sliding window
-  const uint64_t maxlen { parse_size_option(input, "-x", 32) }; // maxlen for counting zeros and ones
+  const uint64_t count { input.get_uint64("-c", 0) }; // maximum number of windows counted, 0 = until EOF
+  const uint64_t n { input.get_uint64("-n", 1) }; // size of sliding window
+  const uint64_t maxlen { input.get_uint64("-x", 32) }; // maxlen for counting zeros and ones
   verbose = input.exists("-v");
   debug = input.exists("-d");
   const bool print_table { input.exists("-t") }; // table of probabilities and counts

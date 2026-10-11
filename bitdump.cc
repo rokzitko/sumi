@@ -24,18 +24,19 @@
 bool verbose;
 auto & msg = std::cerr; // stream for diagnostic messages
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) try
 {
   InputParser input(argc, argv);
+  input.validate_options({"-i", "-ws", "-id", "-c", "-ot", "-od"}, {"-iw", "-ow", "-v"});
 
   const std::string filename { input.exists("-i") ? input.get("-i") : "" };
-  const int ws { input.exists("-ws") ? std::stoi(input.get("-ws")) : 8 }; // word size in bits (8, 16, 32, 64)
-  const Direction id { input.exists("-id") ? std::stoi(input.get("-id")) : 1 }; // default is 1 (lsb to msb)
+  const int ws { input.get_choice("-ws", 8, {8, 16, 32, 64}) }; // word size in bits (8, 16, 32, 64)
+  const Direction id { input.get_choice("-id", 1, {1, 2}) }; // default is 1 (lsb to msb)
   const bool iw = input.exists("-iw"); // byte swap for binary input (endianness change)
-  const uint64_t count { input.exists("-c") ? std::stoul(input.get("-c")) : 0 }; // number of random numbers generated, 0 = infinite
-  const OutputType ot { input.exists("-ot") ? std::stoi(input.get("-ot")) : 1 }; // default is bits as integers (ASCII)
+  const uint64_t count { input.get_uint64("-c", 0) }; // number of random numbers generated, 0 = infinite
+  const OutputType ot { input.get_choice("-ot", 1, {1, 8, 16, 32, 64, 99}) }; // default is bits as integers (ASCII)
   auto ows = get_ws(ot);
-  const Direction od { input.exists("-od") ? std::stoi(input.get("-od")) : 1 }; // default is 1 (lsb to msb)
+  const Direction od { input.get_choice("-od", 1, {1, 2}) }; // default is 1 (lsb to msb)
   const bool ow = input.exists("-ow"); // byte swap for binary output (endianness change)
   verbose = input.exists("-v");
 
@@ -89,4 +90,8 @@ int main(int argc, char *argv[])
       exit(1);
     }
   }
+  return 0;
+} catch (const std::exception &e) {
+  std::cerr << "Error: " << e.what() << std::endl;
+  return 1;
 }
