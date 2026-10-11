@@ -170,17 +170,25 @@ int main(int argc, char *argv[]) try
     }
   }
 
-  double mean = 0.0;
-  double sq = 0.0;
+  uint64_t origin = bins; // first occupied bin; nr > 0 guarantees one exists
+  double mean_shifted = 0.0;
   double Pmin = std::numeric_limits<double>::max();
   double Pmax = std::numeric_limits<double>::min();
   for (uint64_t i = 0; i < bins; i++) {
-    mean += double(i)*P[i];
-    sq += double(i)*double(i)*P[i];
+    if (P[i] > 0.0) {
+      if (origin == bins) origin = i;
+      mean_shifted += double(i-origin)*P[i];
+    }
     Pmin = std::min(Pmin, P[i]);
     Pmax = std::max(Pmax, P[i]);
   }
-  const double var = sq-mean*mean;
+  const double mean = double(origin)+mean_shifted;
+  // Center in shifted coordinates to avoid cancellation at large symbol indices.
+  double var = 0.0;
+  for (uint64_t i = origin; i < bins; i++) {
+    const double delta = double(i-origin)-mean_shifted;
+    var += delta*delta*P[i];
+  }
   const double stddev = sqrt(var);
   const double Hmin1 = -log2(Pmax);
   std::cout << "mean=" << mean << std::endl;

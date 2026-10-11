@@ -20,6 +20,7 @@ CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra -Wshadow -Wpedantic
 check: check_sizes.out
 	./check_sizes.out
 	$(PYTHON) check_entropy.py --bitent $(BITENT)
+	$(PYTHON) check_moments.py --bitent $(BITENT)
 	$(PYTHON) check_runs.py --bitent $(BITENT)
 
 check_sizes.out: check_sizes.cc ../bitent.cc ../version.h $(wildcard ../*.h)

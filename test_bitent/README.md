@@ -1,4 +1,4 @@
-# Entropy and run-count regression checks
+# Entropy, symbol-moment, and run-count regression checks
 
 Build `bitent`, then run the focused checks from the repository root:
 
@@ -42,6 +42,22 @@ With no complete window ($M=0$), no empirical distribution is available.
 probability or entropy report. The `-c` option is an upper limit on counted
 windows: EOF with at least one complete window still gives an estimate based
 on the available windows.
+
+## Symbol mean and variance
+
+The reported `mean`, `var`, and `stddev` describe the integer-valued word labels
+$s$. These are population moments of the empirical histogram. For numerical
+stability, the calculation uses the first occupied label $s_0$ as its origin:
+
+$$
+m=\sum_s p_s(s-s_0),\qquad
+\mu=s_0+m,\qquad
+V=\sum_s p_s\big[(s-s_0)-m\big]^2.
+$$
+
+The variance pass uses the shifted mean $m$ directly, and the reported standard
+deviation is $\sqrt{V}$. This requires one additional scan of the probability
+array and constant additional storage.
 
 ## Run-table definitions
 
@@ -102,6 +118,18 @@ It checks the initial prefix, invariance across histogram widths, limited reads,
 bit order, unobserved lengths, and the final-summary occurrence threshold. It
 also checks rejection of invalid `-n` and `-x` arguments before allocation.
 
+`check_moments.py` compares the mean, population variance, and standard deviation
+with exact rational moments calculated from independently counted windows.
+Cases include uniform and biased distributions, constant and single-word
+samples, input bit order, and nearly constant high-index words with rare adjacent
+labels. The largest case uses 100,000 windows at `-n 20` (16 MiB of histogram
+storage); it suppresses the million-row probability table. For 99,999 occurrences
+of $2^{20}-1$ and one of $2^{20}-2$, the exact variance is
+$99999/10000000000=9.9999\times10^{-6}$. Complementing all bits gives the same
+variance at the low end of the label range. These checks use the report-rounding
+tolerances above, and require finite, nonnegative moments and exactly zero
+variance for constant samples.
+
 `check_sizes.cc` includes the implementation with its CLI entry point renamed.
 It verifies the sizing arithmetic at `n=30`, at vector-capacity boundaries, and
 at integer limits without allocating the corresponding arrays. A single-shot
@@ -113,5 +141,6 @@ To run the Python checks against a particular executable:
 
 ```sh
 python3 test_bitent/check_entropy.py --bitent ./bitent
+python3 test_bitent/check_moments.py --bitent ./bitent
 python3 test_bitent/check_runs.py --bitent ./bitent
 ```
